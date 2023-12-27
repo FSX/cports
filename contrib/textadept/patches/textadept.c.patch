@@ -1,0 +1,12 @@
+diff --git a/src/textadept.c b/src/textadept.c
+index d80a160c..69e96897 100644
+--- a/src/textadept.c
++++ b/src/textadept.c
+@@ -1239,6 +1239,7 @@ void close_textadept() {
+ }
+ 
+ bool init_textadept(int argc, char **argv) {
++	setenv("TEXTADEPT_HOME", "/usr/share/textadept", 0);
+ 	char *last_slash = NULL;
+ 	textadept_home = malloc(FILENAME_MAX + 1);
+ #if __linux__

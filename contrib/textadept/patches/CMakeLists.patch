@@ -1,0 +1,55 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 32a183fd..22bf65af 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -184,7 +184,7 @@ if(QT)
+ 	# SingleApplication
+ 	set(singleapp_zip v3.4.0.zip)
+ 	set(singleapp_url file://${deps_dir}/${singleapp_zip})
+-	if(NOT EXISTS ${deps_dir/${singleapp_zip}})
++	if(NOT EXISTS ${deps_dir}/${singleapp_zip})
+ 		set(singleapp_url
+ 			https://github.com/itay-grudev/SingleApplication/archive/refs/tags/${singleapp_zip})
+ 	endif()
+@@ -428,35 +428,31 @@ if(NOT (WIN32 OR APPLE))
+ 	if(QT)
+ 		install(TARGETS textadept DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_bin_to_data_dir}/textadept
+-			${ta_bin_dir}/textadept SYMBOLIC)")
++			\"\$ENV{DESTDIR}${ta_bin_dir}/textadept\" SYMBOLIC)")
+ 		install(FILES src/textadept.desktop DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_app_to_data_dir}/textadept.desktop
+-			${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept.desktop SYMBOLIC)")
++			\"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept.desktop\" SYMBOLIC)")
+ 	endif()
+ 	if(GTK3 OR GTK2)
+ 		install(TARGETS textadept-gtk DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_bin_to_data_dir}/textadept-gtk
+-			${ta_bin_dir}/textadept-gtk SYMBOLIC)")
++			\"\$ENV{DESTDIR}${ta_bin_dir}/textadept-gtk\" SYMBOLIC)")
+ 		install(FILES src/textadept-gtk.desktop DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_app_to_data_dir}/textadept-gtk.desktop
+-			${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept-gtk.desktop SYMBOLIC)")
++			\"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept-gtk.desktop\" SYMBOLIC)")
+ 	endif()
+ 	if(CURSES)
+ 		install(TARGETS textadept-curses DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_bin_to_data_dir}/textadept-curses
+-			${ta_bin_dir}/textadept-curses SYMBOLIC)")
++			\"\$ENV{DESTDIR}${ta_bin_dir}/textadept-curses\" SYMBOLIC)")
+ 		install(FILES src/textadept-curses.desktop DESTINATION ${ta_data_dir})
+ 		install(CODE "file(CREATE_LINK ${ta_app_to_data_dir}/textadept-curses.desktop
+-			${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept-curses.desktop SYMBOLIC)")
++			\"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_DATADIR}/applications/textadept-curses.desktop\" SYMBOLIC)")
+ 	endif()
+ 	install(FILES init.lua LICENSE DESTINATION ${ta_data_dir})
+ 	install(DIRECTORY core docs ${scilua_dir}/lexers modules themes DESTINATION ${ta_data_dir})
+ 	install(FILES core/images/textadept.svg
+ 		DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+-	# Note: can use file(ARCHIVE_CREATE) in CMake 3.18.
+-	install(CODE "execute_process(
+-		COMMAND ${CMAKE_COMMAND} -E tar czf ${CMAKE_BINARY_DIR}/textadept_${version}.tgz textadept
+-		WORKING_DIRECTORY ${CMAKE_INSTALL_FULL_DATADIR})")
+ elseif(WIN32)
+ 	set(ta_dir ${CMAKE_INSTALL_PREFIX}/textadept)
+ 	if(QT)
