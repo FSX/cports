@@ -1,6 +1,6 @@
 pkgname = "libosinfo"
 pkgver = "1.11.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
     "-Denable-introspection=enabled",
@@ -9,22 +9,22 @@ configure_args = [
 ]
 make_check_env = {"MAKE": "gmake"}
 hostmakedepends = [
-    "meson",
-    "pkgconf",
+    "gettext",
     "glib-devel",
     "gobject-introspection",
-    "vala",
+    "meson",
     "perl",
-    "gettext",
+    "pkgconf",
+    "vala",
 ]
 makedepends = [
-    "libxslt-devel",
-    "libxml2-devel",
     "glib-devel",
     "libsoup-devel",
+    "libxml2-devel",
+    "libxslt-devel",
 ]
-depends = ["hwdata", "osinfo-db", "gmake"]
-checkdepends = list(depends)
+depends = ["hwdata", "osinfo-db"]
+checkdepends = ["gmake"] + depends
 pkgdesc = "GObject API for managing information about operating systems"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later AND LGPL-2.1-or-later"
