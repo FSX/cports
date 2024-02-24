@@ -1,5 +1,5 @@
 pkgname = "cava"
-pkgver = "0.9.1"
+pkgver = "0.10.1"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -29,8 +29,8 @@ pkgdesc = "Console-based audio visualiser"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://github.com/karlstav/cava"
-source = f"https://github.com/karlstav/cava/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "483f571d5fba5fb8aa81511c4dcf8ce0949c7c503ec6c743c2914cd78e6faf03"
+source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
+sha256 = "a3a60814326fa34b54e93ce0b1e66460d55f1007e576c5152fd47024d9ceaff9"
 hardening = ["vis", "cfi"]
 
 

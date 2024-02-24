@@ -1,6 +1,6 @@
 pkgname = "python-pytest-xdist"
 pkgver = "3.5.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -26,10 +26,6 @@ options = ["!check"]
 
 def init_build(self):
     self.env["SETUPTOOLS_SCM_PRETEND_VERSION"] = f"{pkgver}"
-
-
-def init_check(self):
-    self.env["PYTHONPATH"] = "src"
 
 
 def post_install(self):

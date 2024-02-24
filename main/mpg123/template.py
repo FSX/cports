@@ -1,5 +1,5 @@
 pkgname = "mpg123"
-pkgver = "1.32.3"
+pkgver = "1.32.5"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -27,7 +27,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-only"
 url = "https://www.mpg123.org"
 source = f"$(SOURCEFORGE_SITE)/{pkgname}/{pkgname}-{pkgver}.tar.bz2"
-sha256 = "2d9913a57d4ee8f497a182c6e82582602409782a4fb481e989feebf4435867b4"
+sha256 = "af908cdf6cdb6544b97bc706a799f79894e69468af5881bf454a0ebb9171ed63"
 
 
 def _genlib(libn, descn, iif):

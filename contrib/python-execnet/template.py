@@ -1,6 +1,6 @@
 pkgname = "python-execnet"
 pkgver = "2.0.2"
-pkgrel = 0
+pkgrel = 1
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -21,10 +21,6 @@ sha256 = "7500bdc398c39558c04e12eb52075af7365a40f90dec08593f182e8ed733f91e"
 
 def init_build(self):
     self.env["SETUPTOOLS_SCM_PRETEND_VERSION"] = f"{pkgver}"
-
-
-def init_check(self):
-    self.env["PYTHONPATH"] = "src"
 
 
 def post_install(self):

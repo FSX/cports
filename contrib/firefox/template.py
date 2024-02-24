@@ -1,54 +1,54 @@
 pkgname = "firefox"
-pkgver = "121.0"
-pkgrel = 1
+pkgver = "123.0"
+pkgrel = 0
 make_cmd = "gmake"
 hostmakedepends = [
-    "pkgconf",
-    "zip",
-    "nasm",
-    "cargo",
-    "rust",
-    "python",
-    "cbindgen",
-    "llvm-devel",
-    "clang-devel",
-    "nodejs",
-    "gettext",
     "automake",
-    "libtool",
+    "cargo",
+    "cbindgen",
+    "clang-devel",
+    "gettext",
     "gmake",
+    "libtool",
+    "llvm-devel",
+    "nasm",
+    "nodejs",
+    "pkgconf",
+    "python",
+    "rust",
+    "wasi-sdk",
+    "xserver-xorg-xvfb",
+    "zip",
 ]
 makedepends = [
-    "rust-std",
-    "nss-devel",
-    "nspr-devel",
+    "alsa-lib-devel",
+    "dbus-devel",
+    "ffmpeg-devel",
+    "freetype-devel",
+    "glib-devel",
     "gtk+3-devel",
     "icu-devel",
-    "dbus-devel",
-    "glib-devel",
-    "libpulse-devel",
-    "pixman-devel",
-    "freetype-devel",
-    "libjpeg-turbo-devel",
-    "libpng-devel",
-    "libwebp-devel",
     "libevent-devel",
+    "libffi-devel",
+    "libjpeg-turbo-devel",
     "libnotify-devel",
-    "libvpx-devel",
-    "libvorbis-devel",
     "libogg-devel",
+    "libpng-devel",
+    "libpulse-devel",
     "libtheora-devel",
-    "libxt-devel",
+    "libvorbis-devel",
+    "libvpx-devel",
+    "libwebp-devel",
     "libxcomposite-devel",
     "libxscrnsaver-devel",
-    "pipewire-jack-devel",
-    "ffmpeg-devel",
-    "alsa-lib-devel",
+    "libxt-devel",
     "mesa-devel",
-    "libffi-devel",
+    "nspr-devel",
+    "nss-devel",
+    "pipewire-jack-devel",
+    "pixman-devel",
+    "rust-std",
     "zlib-devel",
-    # XXX: https://bugzilla.mozilla.org/show_bug.cgi?id=1532281
-    "dbus-glib-devel",
 ]
 depends = [
     "libavcodec",
@@ -63,7 +63,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-3.0-only AND LGPL-2.1-only AND LGPL-3.0-only AND MPL-2.0"
 url = "https://www.mozilla.org/firefox"
 source = f"$(MOZILLA_SITE)/firefox/releases/{pkgver}/source/firefox-{pkgver}.source.tar.xz"
-sha256 = "edc7a5159d23ff2a23e22bf5abe22231658cee2902b93b5889ee73958aa06aa4"
+sha256 = "9e885abdaddb14cd4f313c1575282fec6af5901f445e9744fe24e2ea837d4cb7"
 debug_level = 1  # defatten, especially with LTO
 tool_flags = {
     "LDFLAGS": ["-Wl,-rpath=/usr/lib/firefox", "-Wl,-z,stack-size=2097152"]
@@ -76,6 +76,7 @@ env = {
     "USE_SHORT_LIBNAME": "1",
     "MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE": "system",
     "MOZ_APP_REMOTINGNAME": "Firefox",
+    "MOZ_NOSPAM": "1",
     "MOZBUILD_STATE_PATH": f"/builddir/{pkgname}-{pkgver}/.mozbuild",
     # firefox checks for it by calling --help
     "CBUILD_BYPASS_STRIP_WRAPPER": "1",
@@ -118,21 +119,7 @@ def init_configure(self):
 
 
 def do_configure(self):
-    self.rm("objdir", recursive=True, force=True)
-    self.mkdir("objdir")
-
-    extra_opts = []
-
-    match self.profile().arch:
-        case "x86_64" | "aarch64":
-            extra_opts += ["--enable-rust-simd"]
-
-    if self.has_lto():
-        extra_opts += ["--enable-lto=cross"]
-
-    self.do(
-        self.chroot_cwd / "mach",
-        "configure",
+    conf_opts = [
         "--prefix=/usr",
         "--libdir=/usr/lib",
         "--host=" + self.profile().triplet,
@@ -142,6 +129,7 @@ def do_configure(self):
         "--enable-optimize",
         "--disable-install-strip",
         "--disable-strip",
+        "--with-wasi-sysroot=/usr/wasm32-unknown-wasi",
         # we have our own flags and better
         "--disable-hardening",
         # system libs
@@ -157,8 +145,6 @@ def do_configure(self):
         "--with-system-icu",
         # no apng support
         "--without-system-png",
-        # wasi currently not ready
-        "--without-wasm-sandboxed-libraries",
         # features
         "--enable-dbus",
         "--enable-jack",
@@ -168,7 +154,6 @@ def do_configure(self):
         "--enable-default-toolkit=cairo-gtk3-wayland",
         "--enable-audio-backends=pulseaudio",
         # disabled features
-        "--disable-crashreporter",
         "--disable-profiling",
         "--disable-jemalloc",
         "--disable-tests",
@@ -178,21 +163,81 @@ def do_configure(self):
         "--enable-official-branding",
         "--enable-application=browser",
         "--allow-addon-sideload",
-        # conditional opts
-        *extra_opts,
-        wrksrc="objdir",
-    )
+    ]
+
+    match self.profile().arch:
+        case "x86_64" | "aarch64":
+            conf_opts += ["--enable-rust-simd"]
+
+    if self.has_lto():
+        conf_opts += ["--enable-lto=cross"]
+        # configure for profiling
+        self.log("bootstrapping profile...")
+        with self.stamp("profile_configure") as s:
+            s.check()
+            self.log("configuring profile build...")
+            self.do(
+                "./mach",
+                "configure",
+                *conf_opts,
+                "--enable-profile-generate=cross",
+            )
+        # do the profiling build
+        with self.stamp("profile_build") as s:
+            s.check()
+            self.log("building profile build...")
+            self.do("./mach", "build")
+        # package it
+        with self.stamp("profile_package") as s:
+            s.check()
+            self.log("packaging profile build...")
+            self.do("./mach", "package")
+        # generate the profile data
+        with self.stamp("profile_generate") as s:
+            s.check()
+            self.log("generating profile...")
+            for d in self.cwd.glob("obj-*"):
+                ldp = self.chroot_cwd / d.name / "dist/firefox"
+            self.do(
+                "xvfb-run",
+                "-w",
+                "10",
+                "-s",
+                "-screen 0 1920x1080x24",
+                "./mach",
+                "python",
+                "./build/pgo/profileserver.py",
+                env={
+                    "HOME": str(self.chroot_cwd),
+                    "LLVM_PROFDATA": "llvm-profdata",
+                    "JARLOG_FILE": str(self.chroot_cwd / "jarlog"),
+                    "LD_LIBRARY_PATH": ldp,
+                },
+            )
+        # clean up build dir
+        with self.stamp("profile_clobber") as s:
+            s.check()
+            self.log("cleaning up profile build...")
+            self.do("./mach", "clobber")
+        # and finally make use of this for real configure
+        conf_opts += [
+            "--enable-profile-use=cross",
+            f"--with-pgo-profile-path={self.chroot_cwd / 'merged.profdata'}",
+            f"--with-pgo-jarlog={self.chroot_cwd / 'jarlog'}",
+        ]
+
+    self.log("configuring final firefox...")
+    self.do("./mach", "configure", *conf_opts)
 
 
 def do_build(self):
-    self.do(self.chroot_cwd / "mach", "build", wrksrc="objdir")
+    self.do("./mach", "build")
 
 
 def do_install(self):
     self.do(
-        self.chroot_cwd / "mach",
+        "./mach",
         "install",
-        wrksrc="objdir",
         env={"DESTDIR": str(self.chroot_destdir)},
     )
 

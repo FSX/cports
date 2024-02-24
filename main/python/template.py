@@ -1,7 +1,7 @@
 # update pyver in autosplit logic and pre_pkg hook on major bumps
 pkgname = "python"
-_majver = "3.11"
-pkgver = f"{_majver}.7"
+_majver = "3.12"
+pkgver = f"{_majver}.2"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -9,7 +9,6 @@ configure_args = [
     "--enable-ipv6",
     "--enable-loadable-sqlite-extensions",
     "--with-computed-gotos",
-    "--with-system-ffi",
     "--with-system-expat",
     "--with-readline=editline",
     "--without-ensurepip",
@@ -34,20 +33,21 @@ make_check_args = [
     "-i test_readline "
     "-i test_threading "
     "-i test_unicodedata "
+    "-i test_urllib2net "  # just loops blocked connection failures into success
     "-i test_tools "
 ]
 hostmakedepends = ["pkgconf", "gmake"]
 makedepends = [
-    "libffi-devel",
-    "openssl-devel",
+    "bluez-headers",
     "bzip2-devel",
     "libedit-devel",
-    "zlib-devel",
-    "xz-devel",
     "libexpat-devel",
-    "sqlite-devel",
+    "libffi-devel",
     "linux-headers",
-    "bluez-headers",
+    "openssl-devel",
+    "sqlite-devel",
+    "xz-devel",
+    "zlib-devel",
 ]
 checkdepends = ["ca-certificates"]
 depends = [f"base-python{_majver}={pkgver}-r{pkgrel}", "ca-certificates"]
@@ -58,7 +58,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Python-2.0"
 url = "https://python.org"
 source = f"https://python.org/ftp/python/{pkgver}/Python-{pkgver}.tar.xz"
-sha256 = "18e1aa7e66ff3a58423d59ed22815a6954e53342122c45df20c96877c062b9b7"
+sha256 = "be28112dac813d2053545c14bf13a16401a21877f1a69eb6ea5d84c4a0f3d870"
 # FIXME int cfi; cfi ftbfs, int fails ctypes test
 # we cannot enable ubsan stuff because there is known UB where tests
 # are just skipped and so on, so be on the safe side for the time being
@@ -79,16 +79,15 @@ if self.profile().cross:
 
 
 def init_configure(self):
+    if not self.profile().cross and self.has_lto():
+        self.configure_args.append("--enable-optimizations")
     bigend = "yes" if (self.profile().endian == "big") else "no"
     self.configure_args.append("ax_cv_c_float_words_bigendian=" + bigend)
     # real configure and linker flags here
     self.env["CFLAGS_NODIST"] = self.get_cflags(shell=True)
     self.env["LDFLAGS_NODIST"] = self.get_ldflags(shell=True)
-
-
-def pre_configure(self):
-    self.rm("Modules/_ctypes/darwin", recursive=True)
-    self.rm("Modules/_ctypes/libffi_osx", recursive=True)
+    # python is being bootstrapped, so set it here (the hook won't set it)
+    self.python_version = _majver
 
 
 def do_install(self):
@@ -107,13 +106,16 @@ def do_install(self):
     self.rm(lbase / "tkinter", recursive=True)
     self.rm(lbase / "turtledemo", recursive=True)
     self.rm(lbase / "test", recursive=True)
-    self.rm(lbase / "lib2to3/tests", recursive=True)
 
     (lbase / "turtle.py").unlink(missing_ok=True)
 
     for f in lbase.glob("config-*"):
         for ff in f.glob("libpython*.a"):
             self.mv(ff, self.destdir / "usr/lib")
+
+    self.install_file(
+        self.files_path / "EXTERNALLY-MANAGED", f"usr/lib/python{_majver}"
+    )
 
     self.install_link("pydoc" + _majver, "usr/bin/pydoc")
     self.install_link("python" + _majver, "usr/bin/python")

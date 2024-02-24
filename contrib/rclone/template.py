@@ -1,5 +1,5 @@
 pkgname = "rclone"
-pkgver = "1.65.0"
+pkgver = "1.65.2"
 pkgrel = 0
 build_style = "go"
 hostmakedepends = ["go"]
@@ -8,7 +8,7 @@ maintainer = "flukey <flukey@vapourmail.eu>"
 license = "MIT"
 url = "https://rclone.org"
 source = f"https://github.com/rclone/rclone/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "22a15cbc381bab351c0698c83c1666344a07e1bde39ba44f33b95c5fb22cfaf4"
+sha256 = "5ae6179908650429e8d366e4940b586a4bd4aa9ee90c23c423be35550dded346"
 # tests require network
 options = ["!check", "!cross"]
 

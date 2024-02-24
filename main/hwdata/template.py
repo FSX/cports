@@ -1,6 +1,5 @@
 pkgname = "hwdata"
-pkgver = "0.377.2"
-_pkgver = "0.377-2"
+pkgver = "0.379"
 pkgrel = 0
 build_style = "configure"
 configure_args = [
@@ -23,8 +22,8 @@ pkgdesc = "Hardware identification databases"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://github.com/vcrhonek/hwdata"
-source = f"{url}/archive/refs/tags/v{_pkgver}.tar.gz"
-sha256 = "e1e79c12b975298ade94a9cf3f76d24a07ef2d25aa0bf4eebaeac9328ce7a2a7"
+source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
+sha256 = "b98ef646d530d5fd3afa3180efbf7c8e22d3da0088f5836f41ee25380d87b092"
 # cycle with pciutils, etc.
 options = ["!check", "empty"]
 

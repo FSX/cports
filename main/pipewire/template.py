@@ -1,6 +1,6 @@
 pkgname = "pipewire"
-pkgver = "1.0.0"
-pkgrel = 2
+pkgver = "1.0.3"
+pkgrel = 0
 build_style = "meson"
 configure_args = [
     "--auto-features=enabled",
@@ -76,8 +76,8 @@ pkgdesc = "Server and user space API to deal with multimedia pipelines"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://pipewire.org"
-source = f"https://gitlab.freedesktop.org/{pkgname}/{pkgname}/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "f91ef1d1161b37aae6e21b9671917d97097e2664c83d919ba3a0793d6fbc543d"
+source = f"https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
+sha256 = "bddb29b9310c344ca069df410f6f02b7f3d8c518811c0505c7fe62d8428fd767"
 # FIXME int: e.g. https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/2968
 hardening = ["!int"]
 

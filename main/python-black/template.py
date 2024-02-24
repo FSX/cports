@@ -1,8 +1,7 @@
 pkgname = "python-black"
-pkgver = "23.12.1"
+pkgver = "24.2.0"
 pkgrel = 0
 build_style = "python_pep517"
-make_check_env = {"PYTHONPATH": "src"}
 hostmakedepends = ["python-build", "python-installer", "python-hatch_vcs"]
 depends = [
     "python-click",
@@ -23,7 +22,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://black.readthedocs.io"
 source = f"$(PYPI_SITE)/b/black/black-{pkgver}.tar.gz"
-sha256 = "4ce3ef14ebe8d9509188014d96af1c456a910d5b5cbf434a09fef7e024b3d0d5"
+sha256 = "bce4f25c27c3435e4dace4815bcb2008b87e167e3bf4ee47ccdc5ce906eb4894"
 # unpackaged checkdepends
 options = ["!check"]
 

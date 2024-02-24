@@ -1,5 +1,5 @@
 pkgname = "gjs"
-pkgver = "1.78.1"
+pkgver = "1.78.4"
 pkgrel = 0
 build_style = "meson"
 # disable tests that need X/dbus
@@ -11,17 +11,17 @@ configure_args = [
     "-Db_ndebug=true",
 ]
 hostmakedepends = [
+    "glib-devel",
+    "gobject-introspection",
     "meson",
     "pkgconf",
-    "gobject-introspection",
-    "glib-devel",
 ]
 makedepends = [
+    "cairo-devel",
     "dbus-devel",
     "glib-devel",
-    "mozjs115-devel",
-    "cairo-devel",
     "libedit-readline-devel",
+    "mozjs115-devel",
 ]
 checkdepends = ["gir-freedesktop", "gtk+3"]
 pkgdesc = "JavaScript bindings for GNOME"
@@ -29,7 +29,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT OR LGPL-2.0-or-later"
 url = "https://gitlab.gnome.org/GNOME/gjs"
 source = f"{url}/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "bcb8470cf42eaf0c895f710099b0c005a359036b12197492c3a5a03ad104cdbf"
+sha256 = "4de9f937bb2defa6a3c3c9c77e3413d6f7cc04a37d57ba7d26180568e6ec5911"
 options = ["!cross"]
 
 

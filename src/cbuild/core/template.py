@@ -196,6 +196,9 @@ class Package:
     def log_red(self, msg, end="\n"):
         self.logger.out_red(self._get_pv() + ": " + msg, end)
 
+    def log_green(self, msg, end="\n"):
+        self.logger.out_green(self._get_pv() + ": " + msg, end)
+
     def log_warn(self, msg, end="\n"):
         self.logger.warn(self._get_pv() + ": " + msg, end)
 
@@ -403,6 +406,7 @@ core_fields = [
     ("options", [], list, False, True, False),
     # other core-ish fields
     ("broken", None, str, False, False, False),
+    ("restricted", None, str, False, False, False),
     ("build_style", None, str, False, False, False),
     # sources
     ("sha256", [], (list, str), False, False, False),
@@ -551,6 +555,7 @@ core_fields_priority = [
     # scriptlet-generating stuff comes last
     ("system_users", True),
     ("system_groups", True),
+    ("restricted", True),
     ("broken", True),
 ]
 
@@ -716,6 +721,7 @@ class Template(Package):
             "maintainer": self.maintainer,
             "url": self.url,
             "broken": self.broken,
+            "restricted": self.restricted,
             "subpackages": subpkgs,
             "variables": metadata,
         }
@@ -780,52 +786,39 @@ class Template(Package):
             != 0
         )
 
-        # find the last revision modifying the template
-        self.git_revision = (
-            subprocess.run(
-                [
-                    "git",
-                    "log",
-                    "--format=oneline",
-                    "-n1",
-                    "--",
-                    self.template_path,
-                ],
-                capture_output=True,
+        def _gitlog(fmt, tgt, pkg):
+            bargs = ["git", "log", "-n1", f"--format={fmt}"]
+            if pkg:
+                bargs += ["--", tgt]
+            else:
+                bargs.append(tgt)
+            return (
+                subprocess.run(bargs, capture_output=True)
+                .stdout.strip()
+                .decode("ascii")
             )
-            .stdout.strip()[0:40]
-            .decode("ascii")
-        )
 
-        if len(self.git_revision) < 40:
-            # ???
-            self.git_revision = None
-            return
+        # find the last revision modifying the template
+        grev = _gitlog("%H", self.template_path, True)
 
+        # 0 length means untracked in git
+        if len(grev) != 40 and len(grev) != 0:
+            self.error(f"invalid commit format for {self.template_path}")
+
+        self.git_revision = grev
         self.git_dirty = dirty
 
-        # template directory modified, do not use a reproducible date
-        if dirty:
+        # template directory modified or not tracked, no  reproducible date
+        if dirty or not grev:
             return
 
         # get the date of the git revision
-        ts = subprocess.run(
-            [
-                "git",
-                "log",
-                "-1",
-                "--format=%cd",
-                "--date=unix",
-                self.git_revision,
-            ],
-            capture_output=True,
-        ).stdout.strip()
+        ts = _gitlog("%ct", grev, False)
 
         try:
             self.source_date_epoch = int(ts)
         except ValueError:
-            # ???
-            pass
+            self.error(f"invalid commit timestamp for {self.template_path}")
 
     def build_lint(self):
         if self.broken:
@@ -1167,6 +1160,7 @@ class Template(Package):
         input=None,
         check=True,
         allow_network=False,
+        path=None,
     ):
         cpf = self.profile()
 
@@ -1271,6 +1265,7 @@ class Template(Package):
             stderr=stderr,
             input=input,
             lldargs=lld_args,
+            binpath=path,
         )
 
     def stamp(self, name):
@@ -1588,12 +1583,12 @@ def _split_static(pkg):
         pkg.take(str(f.relative_to(pkg.parent.destdir)))
 
 
-# TODO: centralize
-gpyver = "3.11"
-
-
 def _split_pycache(pkg):
-    pyver = gpyver.replace(".", "")
+    pyver = getattr(pkg.parent.rparent, "python_version", None)
+    if not pyver:
+        return
+
+    pyver = pyver.replace(".", "")
 
     for f in pkg.parent.destdir.rglob("__pycache__"):
         if not f.is_dir():
@@ -1741,7 +1736,17 @@ class Subpackage(Package):
                     self.install_if = [fbdep]
                 else:
                     if instif == "python-pycache":
-                        instif = f"{instif}~{gpyver}"
+                        # this applies for auto-subpkgs at the relevant
+                        # stage, as those are created using the parent
+                        # very late; for any manually declared stuff
+                        # this is fixed up in pre_pkg/005_py_dep
+                        pyver = getattr(parent.rparent, "python_version", None)
+                        if pyver:
+                            instif = f"{instif}~{pyver}"
+                            # we want pycaches to soft-pull the right python,
+                            # in order for them to affect staging (leave no
+                            # outdated pycache behind)
+                            ddeps.append(f"base-python{pyver}~{pyver}")
                     elif not instif.startswith("base-"):
                         ddeps.append(instif)
                     self.install_if = [fbdep, instif]
@@ -2082,6 +2087,8 @@ def from_module(m, ret):
     # sometimes things need to know if a package is buildable
     if ret.broken:
         ret.broken = f"cannot be built, it's currently broken: {ret.broken}"
+    elif ret.restricted and not ret._allow_restricted:
+        ret.broken = f"cannot be built, it's restricted: {ret.restricted}"
     elif ret.repository not in _allow_cats:
         ret.broken = f"cannot be built, disallowed by cbuild (not in {', '.join(_allow_cats)})"
     elif ret.profile().cross and not ret.options["cross"]:
@@ -2154,6 +2161,7 @@ def read_mod(
     autopkg=False,
     stage=3,
     bulk_mode=False,
+    allow_restricted=True,
 ):
     global _tmpl_dict
 
@@ -2204,6 +2212,7 @@ def read_mod(
     ret.stage = stage
     ret._target = target
     ret._force_check = force_check
+    ret._allow_restricted = allow_restricted
 
     if pkgarch:
         ret._current_profile = profile.get_profile(pkgarch)
@@ -2269,6 +2278,7 @@ def read_pkg(
     autopkg=False,
     stage=3,
     bulk_mode=False,
+    allow_restricted=True,
 ):
     modh, ret = read_mod(
         pkgname,
@@ -2286,6 +2296,7 @@ def read_pkg(
         autopkg,
         stage,
         bulk_mode,
+        allow_restricted,
     )
     return from_module(modh, ret)
 

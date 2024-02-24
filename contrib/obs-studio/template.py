@@ -1,17 +1,17 @@
 pkgname = "obs-studio"
 pkgver = "30.0.2"
-pkgrel = 0
+pkgrel = 2
 build_style = "cmake"
 configure_args = [
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     f"-DOBS_VERSION_OVERRIDE={pkgver}",
     "-DENABLE_ALSA=OFF",
     "-DENABLE_AJA=OFF",
-    # TODO: libdatachannel
-    "-DENABLE_WEBRTC=OFF",
+    "-DENABLE_WEBRTC=ON",
     "-DENABLE_JACK=ON",
-    # XXX: python+lua scripting is checked at once, latter needs luajit
-    "-DENABLE_SCRIPTING=OFF",
+    "-DENABLE_SCRIPTING=ON",
+    "-DENABLE_SCRIPTING_LUA=OFF",
+    "-DENABLE_SCRIPTING_PYTHON=ON",
     "-DENABLE_VLC=OFF",
     # TODO: onevpl
     "-DENABLE_QSV11=OFF",
@@ -30,6 +30,7 @@ makedepends = [
     "freetype-devel",
     "jansson-devel",
     "libcurl-devel",
+    "libdatachannel-devel",
     "libpulse-devel",
     "librist-devel",
     "libva-devel",

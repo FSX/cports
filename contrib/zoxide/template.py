@@ -1,5 +1,5 @@
 pkgname = "zoxide"
-pkgver = "0.9.2"
+pkgver = "0.9.4"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo"]
@@ -9,22 +9,12 @@ maintainer = "aurelia <git@elia.garden>"
 license = "MIT"
 url = "https://github.com/ajeetdsouza/zoxide"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "a6c2d993a02211c3d23b242c2c6faab9a2648be7a45ad1ff0586651ac827e914"
+sha256 = "ec002bdca37917130ae34e733eb29d4baa03b130c4b11456d630a01a938e0187"
 
 
 def post_install(self):
     self.install_license("LICENSE")
     self.install_man("man/man1/*.1", glob=True)
-    self.install_file(
-        "contrib/completions/zoxide.bash",
-        "usr/share/bash-completion/completions",
-        name="zoxide",
-    )
-    self.install_file(
-        "contrib/completions/_zoxide",
-        "usr/share/zsh/site-functions",
-    )
-    self.install_file(
-        "contrib/completions/zoxide.fish",
-        "usr/share/fish/completions",
-    )
+    self.install_completion("contrib/completions/zoxide.bash", "bash")
+    self.install_completion("contrib/completions/zoxide.fish", "fish")
+    self.install_completion("contrib/completions/_zoxide", "zsh")

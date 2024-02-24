@@ -1,9 +1,10 @@
 pkgname = "cpupower"
-pkgver = "6.6.1"
+pkgver = "6.7.1"
 pkgrel = 0
 build_style = "makefile"
 make_cmd = "gmake"
-_make_args = [
+make_build_target = "cpupower"
+make_build_args = [
     "-C",
     "tools",
     # FIXME: cpufreq-bench is completely broken with optimisations because of
@@ -20,10 +21,8 @@ _make_args = [
     "prefix=/usr",
     "sbindir=/usr/bin",
 ]
-make_build_target = "cpupower"
-make_build_args = _make_args
 make_install_target = "cpupower_install"
-make_install_args = _make_args
+make_install_args = list(make_build_args)
 hostmakedepends = ["gmake"]
 makedepends = ["linux-headers", "pciutils-devel"]
 pkgdesc = "Linux CPU power management tools"
@@ -31,7 +30,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-only"
 url = "https://kernel.org"
 source = f"https://cdn.kernel.org/pub/linux/kernel/v{pkgver[:pkgver.find('.')]}.x/linux-{pkgver}.tar.xz"
-sha256 = "da1ed7d47c97ed72c9354091628740aa3c40a3c9cd7382871f3cedbd60588234"
+sha256 = "1ecffa568e86a2202ba5533ad9034bc263a9aa14e189597a94f09b3854ad68c3"
 # nope
 options = ["!check"]
 

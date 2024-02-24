@@ -1,5 +1,5 @@
 pkgname = "python-cryptography"
-pkgver = "41.0.7"
+pkgver = "42.0.5"
 pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
@@ -28,7 +28,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause OR Apache-2.0"
 url = "https://github.com/pyca/cryptography"
 source = f"$(PYPI_SITE)/c/cryptography/cryptography-{pkgver}.tar.gz"
-sha256 = "13f93ce9bea8016c253b34afc6bd6a75993e5c40672ed5405a9c832f0d4a00bc"
+sha256 = "6fe07eec95dfd477eb9530aef5bead34fec819b3aaf6c5bd6d20565da607bfe1"
 # unpackaged checkdepends
 options = ["!check"]
 

@@ -1,5 +1,5 @@
 pkgname = "chezmoi"
-pkgver = "2.42.3"
+pkgver = "2.46.1"
 pkgrel = 0
 build_style = "go"
 make_build_args = [
@@ -11,8 +11,8 @@ pkgdesc = "Manage your dotfiles across multiple machines, securely"
 maintainer = "triallax <triallax@tutanota.com>"
 license = "MIT"
 url = "https://chezmoi.io"
-source = f"https://github.com/twpayne/{pkgname}/archive/v{pkgver}.tar.gz"
-sha256 = "095a0e4818f5512fc15f4ead31e8c123423eed588487b465ec9d52b9a1e29484"
+source = f"https://github.com/twpayne/chezmoi/archive/v{pkgver}.tar.gz"
+sha256 = "5b6b908da4a374d9fcad07b1f5002e50f3d5a8fdda2eb5f471befdcf365f67e4"
 options = ["!debug"]
 
 

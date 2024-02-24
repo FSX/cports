@@ -1,6 +1,6 @@
 pkgname = "dinit-chimera"
-pkgver = "0.99.4"
-pkgrel = 0
+pkgver = "0.99.5"
+pkgrel = 1
 build_style = "meson"
 hostmakedepends = ["meson"]
 makedepends = ["linux-headers"]
@@ -19,13 +19,13 @@ depends = [
     "virtual:cmd:udevadm!udev",
     "virtual:cmd:systemd-tmpfiles!systemd-utils",
 ]
-triggers = ["/usr/lib/binfmt.d"]
+triggers = ["/usr/lib/binfmt.d", "/var/lib/swclock"]
 pkgdesc = "Chimera core services suite"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-2-Clause"
 url = "https://github.com/chimera-linux/dinit-chimera"
 source = f"https://github.com/chimera-linux/dinit-chimera/archive/tags/v{pkgver}.tar.gz"
-sha256 = "5a0ed6a24777239c4614beca38a11a585232a91ff14fbf49ed2868ed5828b45a"
+sha256 = "8252caea1030813e7ced5f197e04bf79a09b011b26cabcd8a966ade16bc05b60"
 hardening = ["vis", "cfi"]
 # no tests
 options = ["!check", "brokenlinks"]
@@ -33,8 +33,11 @@ options = ["!check", "brokenlinks"]
 
 def post_install(self):
     self.install_license("COPYING.md")
-    self.install_file(self.files_path / "hostname", "etc")
     self.install_file(self.files_path / "locale.conf", "etc")
+    self.install_file(self.files_path / "dinit.conf", "usr/lib/tmpfiles.d")
+    # swclock
+    self.install_dir("var/lib/swclock")
+    (self.destdir / "var/lib/swclock/timestamp").touch(0o644)
     # init symlink
     self.install_dir("usr/bin")
     self.install_link("dinit", "usr/bin/init")

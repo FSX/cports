@@ -1,6 +1,6 @@
 pkgname = "python-pytest-forked"
 pkgver = "1.6.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -23,10 +23,6 @@ sha256 = "97128a8194df2c6d164b1377274a5dcfa9730f66264a48ad709e3539b25fab75"
 
 def init_build(self):
     self.env["SETUPTOOLS_SCM_PRETEND_VERSION"] = f"{pkgver}"
-
-
-def init_check(self):
-    self.env["PYTHONPATH"] = "src"
 
 
 def post_install(self):

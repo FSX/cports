@@ -1,5 +1,5 @@
 pkgname = "glib"
-pkgver = "2.78.3"
+pkgver = "2.78.4"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -12,6 +12,7 @@ hostmakedepends = [
     "meson",
     "gettext",
     "pkgconf",
+    "python-packaging",
     "docbook-xsl-nons",
     "xsltproc",
 ]
@@ -35,7 +36,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-or-later"
 url = "https://wiki.gnome.org/Projects/GLib"
 source = f"$(GNOME_SITE)/{pkgname}/{pkgver[:-2]}/{pkgname}-{pkgver}.tar.xz"
-sha256 = "609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21"
+sha256 = "24b8e0672dca120cc32d394bccb85844e732e04fe75d18bb0573b2dbc7548f63"
 # FIXME int - e.g. g_ascii_strtoll fails
 hardening = ["!int"]
 # cyclic with desktop-file-utils
@@ -53,6 +54,7 @@ def post_install(self):
 
 @subpackage("glib-devel")
 def _devel(self):
+    self.depends += ["python-packaging"]
     return self.default_devel(
         extra=[
             "usr/bin/glib-compile-resources",

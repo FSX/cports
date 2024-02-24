@@ -1,5 +1,5 @@
 pkgname = "jasper"
-pkgver = "4.1.1"
+pkgver = "4.2.1"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -13,8 +13,8 @@ pkgdesc = "Reference implementation of the JPEG-2000 codec"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "JasPer-2.0"
 url = "https://ece.engr.uvic.ca/~frodo/jasper"
-source = f"https://github.com/jasper-software/{pkgname}/releases/download/version-{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "03ba86823f8798f3f60a5a34e36f3eff9e9cbd76175643a33d4aac7c0390240a"
+source = f"https://github.com/jasper-software/jasper/releases/download/version-{pkgver}/{pkgname}-{pkgver}.tar.gz"
+sha256 = "2d1e21f1b346709bc176156173c6d77a3e5543346764085dbde732215120b796"
 
 
 def post_install(self):

@@ -102,8 +102,7 @@ can go. These currently are:
 
 * `main`
 * `contrib`
-* `restricted`
-* `experimental`
+* `user`
 
 Each category has its own repository that is named the same as the category.
 
@@ -114,37 +113,31 @@ evaluated for `main` based on various factors such as usefulness, quality of
 the software, licensing and others. Templates in `main` must not depend on
 templates in other categories.
 
-The `contrib` category is a *user repository*. The requirements for `contrib`
-are looser than for `main` and the software is not officially supported by
-the distribution, but the distro still provides hosting for binary packages
-and templates undergo review and acceptance by the distro maintainers. In
-addition to other `contrib` templates, software here may depend on `main`
-templates.
+The `contrib` category is a second-tier repository with looser requirements.
+In general, software here is not required to have a fully working system,
+outside of special devices with special kernels and bootloaders. Templates
+here still undergo the same review process as changes in `main`. The templates
+may depend on any `main` templates. Binary packages are usually built.
 
-The `restricted` category in general contains proprietary software and stuff
-that we cannot redistribute. Software here may depend on anything from `main`
-or `contrib`. Unlike `contrib` packages, no binary packages are shipped and
-users need to build it themselves.
-
-Finally, the `experimental` category is mostly unrestricted and has the
-least stringent quality requirements. Anything that is anyhow controversial
-goes here; once determined to be acceptable, a maintainer may move the
-template to `contrib` (or sometimes `non-free`). Software in this category
-does not have binary packages shipped and users are on their own testing it.
+Finally, the `user` category is a multi-purpose place, primarily a user repo;
+only some templates may be receiving binary packages, and software marked
+`restricted` can go here (for things that are non-redistributable, or for
+things that are a public work in progress that may be tested but should not
+be packaged). Anything that is anyhow controversial must go here. In some cases,
+some templates may be moved into `contrib` later. Least stringent rules apply.
 
 <a id="targets"></a>
 ## Targets and Tiers
 
 Chimera target architecture support is tiered. The tiering affects whether
-software can get included in `main` and `contrib`.
+software can get included in the repositories.
 
 Tier 1 targets must be supported by all software receiving binary packages,
-i.e. those in `main` and `contrib` section; software not being supported on
-a tier 1 target means staying in `experimental`. This does not apply when
-the software only reasonably makes sense on a subset of the architectures
-(an example would be a UEFI bootloader).  All `main` software must have its
-test suite passing on tier 1 targets unless there is a good reason for the
-otherwise (e.g. tests themselves being broken).
+i.e. those in `main` and `contrib` section; software unsupported on any
+tier 1 architecture must stay in `user`, except in cases where it does not
+make sense (e.g. a UEFI bootloader would only apply to UEFI-capable archs).
+We try to make sure all `main` software has passing test suites on all tier
+1 architectures, assuming the tests can be run and are not themselves broken.
 
 Tier 2 targets will receive packaging when possible. They must have a
 fully working `main`, but `contrib` packages may be missing in some cases.
@@ -158,7 +151,8 @@ assuming a pass regardless of the actual outcome). Breakage in tier 3
 targets does not block updating packages, and support is entirely on
 community basis.
 
-Tier 4 targets receive only `main` packages.
+Tier 4 targets receive only `main` packages. All other targets receive
+all packages (`main`, `contrib`, `user`) as required or possible.
 
 There may also be untiered targets. Those have profiles but do not have
 any packages at the moment. It typically means this target is not ready
@@ -191,10 +185,11 @@ targets may be promoted at a later point.
 <a id="quality_requirements"></a>
 ## Quality Requirements
 
-In order to be included in `experimental`, there are few requirements. The
-software has to provide something of usefulness to the users and must not
-be malicious. At the time of introduction, it must satisfy the general style
-requirements and must be buildable.
+In order to be included in `user`, there are few requirements. The software has
+to provide something of usefulness to the users, must not be malicious, and
+must not violate the project community guidelines. At the time of introduction,
+it must satisfy the general style requirements and must be buildable, it will
+receive a review from a maintainer and will be merged at their convenience.
 
 For inclusion into `contrib`, the software must additionally be provided
 under a redistributable license and must be open source; when possible, it
@@ -211,7 +206,11 @@ be packaged from stable versions. That means using proper release tarballs
 rather than arbitrary `git` or similar revisions. Exceptions to this may
 be made for `contrib` (such as when the software is high profile and the
 latest stable release is very old and provides worse user experience) but
-not for `main`.
+not for `main`. For `user`, there is no restriction.
+
+Templates to be included in `contrib` or better should generally do their
+best to eliminate vendoring of dependencies, except in cases where this is
+not realistically possible (e.g. most rust/go software and so on).
 
 <a id="correct_style"></a>
 ### Correct Style
@@ -936,6 +935,10 @@ Keep in mind that default values may be overridden by build styles.
   conflicting files. This is primarily useful for moving files from one
   package to another, or together with `replaces_priority`, for "policy
   packages".
+* `restricted` *(str)* By default, `cbuild` does not allow packages that
+  are marked this way to be built. The value is the reason why it's marked
+  like that. Often this will be e.g. non-redistributable clause in the
+  terms of the package.
 * `scriptlets` *(dict)* A dictionary of strings that are the scriptlets for
   this package. These take precedence over file scriptlets.
 * `sha256` *(list or str)* A list of SHA256 checksums (or just one checksum
@@ -2693,7 +2696,19 @@ packages will be stored, i.e. for the main package as well as subpackages.
 
 Like `destdir_base`, but when viewed from inside the sandbox.
 
-##### def do(self, cmd, *args, env = None, wrksrc = None, capture_output = False, stdout = None, stderr = None, input = None, check = True, allow_network = False)
+##### self.python_version, self.python_major, self.python_minor
+
+These variables are available from `configure` stage onwards assuming Python
+is available in the build root.
+
+The `python_version` is a string (e.g. `3.12`) while the other two are integers
+(e.g. 3 and 12).
+
+##### self.ruby_version, self.ruby_major, self.ruby_minor, self.ruby_patch
+
+Similar to Python above, but for Ruby.
+
+##### def do(self, cmd, *args, env = None, wrksrc = None, capture_output = False, stdout = None, stderr = None, input = None, check = True, allow_network = False, path = None)
 
 Execute a command in the build container, sandboxed. Does not spawn a shell,
 instead directly runs `cmd`, passing it `*args`. You can use `env` to provide
@@ -2712,6 +2727,10 @@ namespace) unless we're at `fetch`.
 
 The `allow_network` argument can be used to conditionally allow network access
 but only during the `fetch`, `extract`, `prepare` and `patch` phases.
+
+The `path` argument is an array that can specify additional executable paths
+to prepend to the sandbox `PATH`. These will take priority over the default
+`/usr/bin`.
 
 If run during the `install` phase (or during the `check` phase when `checkroot`
 is enabled in `options`), the command will be run masquerading as the `root`

@@ -1,25 +1,30 @@
 pkgname = "curl"
-pkgver = "8.5.0"
-pkgrel = 0
+pkgver = "8.6.0"
+pkgrel = 2
 build_style = "gnu_configure"
 configure_args = [
     "--enable-threaded-resolver",
     "--enable-ipv6",
+    "--with-libidn2",
+    "--with-libpsl",
     "--with-libssh2",
+    "--with-openssl-quic",
     "--with-ssl",
     "--with-zstd",
     "--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt",
     "ac_cv_path_NROFF=/usr/bin/mandoc",
     "ac_cv_sizeof_off_t=8",
 ]
-make_check_env = {"USER": "nobody"}
 hostmakedepends = ["pkgconf", "perl", "mandoc"]
 makedepends = [
+    "libidn2-devel",
+    "libpsl-devel",
+    "libssh2-devel",
     "nghttp2-devel",
+    "nghttp3-devel",
+    "openssl-devel",
     "zlib-devel",
     "zstd-devel",
-    "openssl-devel",
-    "libssh2-devel",
 ]
 checkdepends = ["python", "nghttp2"]
 depends = ["ca-certificates"]
@@ -28,7 +33,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://curl.haxx.se"
 source = f"{url}/download/{pkgname}-{pkgver}.tar.bz2"
-sha256 = "ce4b6a6655431147624aaf582632a36fe1ade262d5fab385c60f78942dd8d87b"
+sha256 = "b4785f2d8877fa92c0e45d7155cf8cc6750dbda961f4b1a45bcbec990cf2fa9b"
 # FIXME cfi
 hardening = ["vis", "!cfi"]
 # missing some checkdepends

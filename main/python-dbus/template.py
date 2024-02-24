@@ -1,12 +1,12 @@
 pkgname = "python-dbus"
 pkgver = "1.3.2"
-pkgrel = 0
+pkgrel = 2
 build_style = "gnu_configure"
 make_cmd = "gmake"
 hostmakedepends = ["gmake", "pkgconf", "python-devel"]
 makedepends = ["glib-devel", "dbus-devel", "python-devel"]
 checkdepends = ["dbus"]
-depends = ["python", "dbus"]
+depends = ["python"]
 pkgdesc = "Python bindings for D-Bus"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"

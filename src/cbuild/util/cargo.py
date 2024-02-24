@@ -149,7 +149,9 @@ class Cargo:
         wrksrc=None,
         wrapper=[],
     ):
-        return self._invoke(command, args, jobs, None, env, wrksrc, [], wrapper)
+        return self._invoke(
+            command, args, jobs, offline, None, env, wrksrc, [], wrapper
+        )
 
     def vendor(self, args=[], env={}, wrksrc=None, wrapper=[]):
         return self._invoke(
@@ -197,7 +199,7 @@ class Cargo:
         tmpl = self.template
         return self._invoke(
             "test",
-            ["--release"] + tmpl.make_check_args + args,
+            tmpl.make_check_args + args,
             jobs,
             True,
             tmpl.make_check_env,

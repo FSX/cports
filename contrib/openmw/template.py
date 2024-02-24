@@ -1,6 +1,6 @@
 pkgname = "openmw"
 pkgver = "0.47.0"
-pkgrel = 1
+pkgrel = 2
 build_style = "cmake"
 configure_args = [
     # enable once we have proper qt6 support (0.49)
@@ -29,7 +29,7 @@ url = "https://openmw.org"
 _recast_hash = "e75adf86f91eb3082220085e42dda62679f9a3ea"
 _bullet_hash = "3.17"
 source = [
-    f"https://gitlab.com/OpenMW/{pkgname}/-/archive/{pkgname}-{pkgver}/{pkgname}-{pkgname}-{pkgver}.tar.gz",
+    f"https://gitlab.com/OpenMW/openmw/-/archive/{pkgname}-{pkgver}/{pkgname}-{pkgname}-{pkgver}.tar.gz",
     f"!https://github.com/recastnavigation/recastnavigation/archive/{_recast_hash}.zip",
     f"!https://github.com/bulletphysics/bullet3/archive/refs/tags/{_bullet_hash}.tar.gz",
 ]
