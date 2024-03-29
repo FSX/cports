@@ -1,6 +1,6 @@
 pkgname = "zig-nightly"
 pkgver = "0.12.0"
-pkgrel = 0
+pkgrel = 3
 build_style = "cmake"
 configure_args = [
     "-DZIG_PIE=ON",
@@ -24,8 +24,8 @@ pkgdesc = "Zig programming language toolchain"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://github.com/ziglang/zig"
-source = f"https://ziglang.org/builds/zig-{pkgver}-dev.1767+1e42a3de8.tar.xz"
-sha256 = "79287ee481ae844aa4fe38e22f7e8dcf1a7f5f0812f105a80a21c62b89b44dcc"
+source = "https://ziglang.org/builds/zig-0.12.0-dev.1856+94c63f31f.tar.xz"
+sha256 = "9045bfc9da86a3e13f6a5c2793e992093b1089756deeddc1a03fadd221fc4148"
 # lighten up the build, only applies to bootstrap
 hardening = ["!int", "!scp", "!var-init"]
 # lto only gets applied to the C bootstrap and slows down the build (doesn't
