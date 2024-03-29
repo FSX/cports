@@ -1,6 +1,6 @@
 pkgname = "efl"
 pkgver = "1.27.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
     "-Dbuild-tests=false",  # enable if enabling tests
@@ -78,7 +78,7 @@ makedepends = [
     "libraw-devel",
     "librsvg-devel",
     "libspectre-devel",
-    "libpoppler-cpp-devel",
+    "libpoppler-devel",
     "libsndfile-devel",
     "gstreamer-devel",
     "gst-plugins-base-devel",

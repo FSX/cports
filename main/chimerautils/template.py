@@ -1,6 +1,6 @@
 pkgname = "chimerautils"
 pkgver = "14.0.5"
-pkgrel = 1
+pkgrel = 2
 build_style = "meson"
 configure_args = []
 hostmakedepends = ["flex", "byacc", "meson", "pkgconf"]
@@ -14,7 +14,6 @@ makedepends = [
     "xz-devel",
     "zlib-devel",
     "bzip2-devel",
-    "linux-headers",
     "libxo-devel",
     "musl-bsd-headers",
 ]
@@ -32,7 +31,10 @@ options = ["bootstrap", "!check"]
 if self.stage > 0:
     makedepends += ["linux-headers", "zstd-devel"]
     configure_args += ["-Dtiny=enabled"]
+    # don't bother in stage 0
+    depends += ["sd-tools"]
 else:
+    makedepends += ["libxo-devel-static"]
     configure_args += ["-Dzstd=disabled"]
 
 

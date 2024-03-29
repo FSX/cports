@@ -118,7 +118,46 @@ def setup_depends(pkg, only_names=False):
     return hdeps, tdeps, rdeps
 
 
-def _install_from_repo(pkg, pkglist, virtn, cross=False):
+def _install_virt(pkg, vlist, tgt=True):
+    # unique items in the list
+    virtlist = sorted(list(set(vlist)))
+    ret = None
+    for vd in virtlist:
+        ret = apki.call_chroot(
+            "add",
+            ["--virtual", vd],
+            None,
+            capture_output=True,
+            allow_untrusted=True,
+        )
+        if ret.returncode != 0:
+            break
+    # add for cross target if needed
+    if (not ret or ret.returncode == 0) and pkg.profile().cross and tgt:
+        for vd in virtlist:
+            ret = apki.call_chroot(
+                "add",
+                ["--root", str(pkg.profile().sysroot), "--virtual", vd],
+                None,
+                capture_output=True,
+                arch=pkg.profile().arch,
+                allow_untrusted=True,
+            )
+            if ret.returncode != 0:
+                break
+    if ret.returncode != 0:
+        outl = ret.stderr.strip().decode()
+        outx = ret.stdout.strip().decode()
+        if len(outl) > 0:
+            pkg.logger.out_plain(">> stderr:")
+            pkg.logger.out_plain(outl)
+        if len(outx) > 0:
+            pkg.logger.out_plain(">> stdout:")
+            pkg.logger.out_plain(outx)
+        pkg.error("failed to set up virtual enablers")
+
+
+def _install_from_repo(pkg, pkglist, cross=False):
     from cbuild.apk import sign
 
     signkey = sign.get_keypath()
@@ -126,21 +165,18 @@ def _install_from_repo(pkg, pkglist, virtn, cross=False):
     if pkg.stage == 0:
         ret = apki.call(
             "add",
-            ["--no-chown", "--no-scripts", "--virtual", virtn] + pkglist,
+            ["--usermode", "--no-scripts"] + pkglist,
             pkg,
             capture_output=True,
             allow_untrusted=not signkey,
         )
     elif cross and pkg.profile().cross:
-        # for cross target dependencies, install into sysroot
         ret = apki.call_chroot(
             "add",
             [
                 "--root",
                 str(pkg.profile().sysroot),
                 "--no-scripts",
-                "--virtual",
-                virtn,
             ]
             + pkglist,
             pkg,
@@ -149,12 +185,12 @@ def _install_from_repo(pkg, pkglist, virtn, cross=False):
             allow_untrusted=not signkey,
         )
     else:
-        if virtn:
-            aopts = ["--virtual", virtn] + pkglist
-        else:
-            aopts = pkglist
         ret = apki.call_chroot(
-            "add", aopts, pkg, capture_output=True, allow_untrusted=not signkey
+            "add",
+            pkglist,
+            pkg,
+            capture_output=True,
+            allow_untrusted=not signkey,
         )
     if ret.returncode != 0:
         outl = ret.stderr.strip().decode()
@@ -271,6 +307,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
 
     host_binpkg_deps = []
     binpkg_deps = []
+    virt_deps = []
     host_missing_deps = []
     missing_deps = []
     missing_rdeps = []
@@ -312,6 +349,8 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         if aver:
             log.out_plain(f"   [host] {pkgn}: found ({aver})")
             host_binpkg_deps.append(f"{pkgn}={aver}")
+            if pkgn.endswith("-bootstrap"):
+                virt_deps.append("bootstrap:" + pkgn.removesuffix("-bootstrap"))
             continue
         # dep finder did not previously resolve a template
         if not sver:
@@ -331,6 +370,8 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         if aver:
             log.out_plain(f"   [target] {pkgn}: found ({aver})")
             binpkg_deps.append(f"{pkgn}={aver}")
+            if pkgn.endswith("-bootstrap"):
+                virt_deps.append("bootstrap:" + pkgn.removesuffix("-bootstrap"))
             continue
         # dep finder did not previously resolve a template
         if not sver:
@@ -415,6 +456,8 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         except template.SkipPackage:
             pass
         host_binpkg_deps.append(f"{pn}={pv}")
+        if pn.endswith("-bootstrap"):
+            virt_deps.append("bootstrap:" + pn.removesuffix("-bootstrap"))
 
     for pn, pv in missing_deps:
         try:
@@ -444,10 +487,15 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         except template.SkipPackage:
             pass
         binpkg_deps.append(f"{pn}={pv}")
+        if pn.endswith("-bootstrap"):
+            virt_deps.append("bootstrap:" + pn.removesuffix("-bootstrap"))
 
     for rd, rop, rv in missing_rdeps:
         if rop and rv:
-            rfv = f"{rd}-{_srcpkg_ver(rd, pkg)}"
+            rdv = _srcpkg_ver(rd, pkg)
+            if not rdv:
+                pkg.error(f"template '{rd}' cannot be resolved")
+            rfv = f"{rd}-{rdv}"
             rpt = rd + rop + rv
             # ensure the build is not futile
             if not autil.pkg_match(rfv, rpt):
@@ -479,14 +527,17 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         except template.SkipPackage:
             pass
 
+    if len(virt_deps) > 0:
+        _install_virt(pkg, virt_deps, len(binpkg_deps) > 0)
+
     if len(host_binpkg_deps) > 0:
         pkg.log(f"installing host dependencies: {', '.join(host_binpkg_deps)}")
         with flock.lock(flock.apklock(chost)):
-            _install_from_repo(pkg, host_binpkg_deps, "autodeps-host")
+            _install_from_repo(pkg, host_binpkg_deps)
 
     if len(binpkg_deps) > 0:
         pkg.log(f"installing target dependencies: {', '.join(binpkg_deps)}")
         with flock.lock(flock.apklock(tarch)):
-            _install_from_repo(pkg, binpkg_deps, "autodeps-target", True)
+            _install_from_repo(pkg, binpkg_deps, True)
 
     return missing

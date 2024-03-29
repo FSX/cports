@@ -1,6 +1,6 @@
 pkgname = "chromium"
 # https://chromiumdash.appspot.com/releases?platform=Linux
-pkgver = "122.0.6261.57"
+pkgver = "123.0.6312.58"
 pkgrel = 0
 archs = ["aarch64", "ppc64le", "x86_64"]
 configure_args = [
@@ -14,7 +14,6 @@ configure_args = [
     "disable_fieldtrial_testing_config=true",
     "enable_hangout_services_extension=true",
     "enable_nacl=false",
-    "enable_nocompile_tests_new=false",
     "enable_rust=true",
     "enable_stripping=false",
     "enable_vr=false",
@@ -137,7 +136,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
 url = "https://www.chromium.org"
 source = f"https://commondatastorage.googleapis.com/chromium-browser-official/chromium-{pkgver}.tar.xz"
-sha256 = "1594635f8c2db05c8d17f9f2e591b554eaf821a1a2249c271e91926db49fa7cd"
+sha256 = "f8dae4a2ff7b00bb44fa136c2101638fea4f232e4819be3f73381ddc0d3bf718"
 debug_level = 0
 tool_flags = {
     "CFLAGS": [
@@ -151,9 +150,9 @@ tool_flags = {
         "-Wno-deprecated-declarations",
     ],
 }
-suid_files = [
-    "usr/lib/chromium/chrome-sandbox",
-]
+file_modes = {
+    "usr/lib/chromium/chrome-sandbox": ("root", "root", 0o4755),
+}
 hardening = ["!scp"]
 # lol
 options = ["!cross", "!check", "!scanshlibs"]

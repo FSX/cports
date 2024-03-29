@@ -37,7 +37,7 @@ def genpkg(pkg, repo, arch, binpkg):
         "--info",
         f"license:{pkg.license}",
         "--info",
-        f"origin:{pkg.rparent.pkgname}",
+        f"origin:{pkg.origin}",
         "--info",
         f"maintainer:{pkg.rparent.maintainer}",
         "--info",
@@ -52,6 +52,10 @@ def genpkg(pkg, repo, arch, binpkg):
 
     # dependencies of any sort
     deps = []
+
+    # bootstrap packages are not installable ootb
+    if pkg.pkgname.endswith("-bootstrap") and pkg.build_style != "meta":
+        deps += ["bootstrap:" + pkg.pkgname.removesuffix("-bootstrap")]
 
     # explicit package depends
     for c in pkg.depends:
@@ -160,27 +164,8 @@ set -e
 
     needscript = False
 
-    # at this point permissions are already applied, we just need owners
-    for f in pkg.file_modes:
-        fpath = pkg.chroot_destdir / f
-        recursive = False
-        if len(pkg.file_modes[f]) == 4:
-            uname, gname, fmode, recursive = pkg.file_modes[f]
-        else:
-            uname, gname, fmode = pkg.file_modes[f]
-        # avoid noops
-        if (uname == "root" or uname == 0) and (gname == "root" or gname == 0):
-            continue
-        # now we know it's needed
-        needscript = True
-        # handle recursive owner
-        if recursive:
-            chcmd = "chown -R"
-        else:
-            chcmd = "chown"
-        wscript += f"""{chcmd} {uname}:{gname} {shlex.quote(str(fpath))}\n"""
-
     # as fakeroot, add extended attributes and capabilities
+    # this needs to be done BEFORE chowning, or fakeroot messes things up
     for f in pkg.file_xattrs:
         fpath = pkg.chroot_destdir / f
         attrs = pkg.file_xattrs[f]
@@ -197,6 +182,27 @@ set -e
             # regular attr set
             wscript += f"""setfattr -n {a} -v "{av}" {qfp}\n"""
 
+    # at this point permissions are already applied, we just need owners
+    for f in pkg.file_modes:
+        fpath = pkg.chroot_destdir / f
+        recursive = False
+        if len(pkg.file_modes[f]) == 4:
+            uname, gname, fmode, recursive = pkg.file_modes[f]
+        else:
+            uname, gname, fmode = pkg.file_modes[f]
+        # avoid noops (except when xattring, then we need to re-chown)
+        if (uname == "root" or uname == 0) and (gname == "root" or gname == 0):
+            if f not in pkg.file_xattrs:
+                continue
+        # now we know it's needed
+        needscript = True
+        # handle recursive owner
+        if recursive:
+            chcmd = "chown -R"
+        else:
+            chcmd = "chown"
+        wscript += f"""{chcmd} {uname}:{gname} {shlex.quote(str(fpath))}\n"""
+
     # execute what we were wrapping
     wscript += """exec "$@"\n"""
 
@@ -212,6 +218,12 @@ set -e
 
     # remove any potential outdated package
     binpath.unlink(missing_ok=True)
+
+    # for stage 1, we have stage0 apk built without zstd
+    if (pkg.stage > 1 and pkg.compression) or pkg.compression == "none":
+        pargs += ["--compression", pkg.compression]
+    else:
+        pargs += ["--compression", autil.get_compression()]
 
     try:
         logger.get().out(f"Creating {binpkg} in repository {repo}...")

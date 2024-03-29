@@ -19,6 +19,7 @@ def get_environment(pkg, jobs=None):
         f"CARGO_TARGET_{utrip}_LINKER": pkg.get_tool("CC"),
         "CARGO_BUILD_JOBS": str(jobs),
         "CARGO_PROFILE_RELEASE_PANIC": "abort",
+        "CARGO_PROFILE_RELEASE_STRIP": "false",
         "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1",
         "CARGO_REGISTRIES_CRATES_IO_PROTOCOL": "sparse",
         "CARGO_HOME": "/cbuild_cache/cargo",
@@ -41,6 +42,8 @@ def get_environment(pkg, jobs=None):
         "RUSTONIG_SYSTEM_LIBONIG": "1",
         # zstd-sys
         "ZSTD_SYS_USE_PKG_CONFIG": "1",
+        # libsqlite3-sys
+        "LIBSQLITE3_SYS_USE_PKG_CONFIG": "1",
         # cc-rs: make sure host compiler autoguess behavior is bypassed
         "HOST_CC": "clang",
         "HOST_CFLAGS": "-O2",
@@ -126,6 +129,12 @@ class Cargo:
 
         if offline:
             bargs.append("--offline")
+
+        # legacy config format to be avoided
+        legacy = self.template.cwd / ".cargo/config"
+
+        if legacy.is_file():
+            self.template.error("cargo: found legacy .cargo/config")
 
         return self.template.do(
             *wrapper,

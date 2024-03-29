@@ -1,5 +1,5 @@
 pkgname = "shadow"
-pkgver = "4.14.5"
+pkgver = "4.14.6"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -29,20 +29,20 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
 url = "https://github.com/shadow-maint/shadow"
 source = f"{url}/releases/download/{pkgver}/shadow-{pkgver}.tar.xz"
-sha256 = "cba74bc7b05d89c015afe23131f9159ece38779d40a8af4cf162852e6e85ca23"
-suid_files = [
-    "usr/bin/chage",
-    "usr/bin/chfn",
-    "usr/bin/chsh",
-    "usr/bin/expiry",
-    "usr/bin/gpasswd",
-    "usr/bin/newgidmap",
-    "usr/bin/newuidmap",
-    "usr/bin/newgrp",
-    "usr/bin/passwd",
-    "usr/bin/sg",
-    "usr/bin/su",
-]
+sha256 = "17bdd568e7683e5df4e2de6cf69b0905d8a3a028c1689eb189005fea268e0ad6"
+file_modes = {
+    "usr/bin/chage": ("root", "root", 0o4755),
+    "usr/bin/chfn": ("root", "root", 0o4755),
+    "usr/bin/chsh": ("root", "root", 0o4755),
+    "usr/bin/expiry": ("root", "root", 0o4755),
+    "usr/bin/gpasswd": ("root", "root", 0o4755),
+    "usr/bin/newgidmap": ("root", "root", 0o4755),
+    "usr/bin/newuidmap": ("root", "root", 0o4755),
+    "usr/bin/newgrp": ("root", "root", 0o4755),
+    "usr/bin/passwd": ("root", "root", 0o4755),
+    "usr/bin/sg": ("root", "root", 0o4755),
+    "usr/bin/su": ("root", "root", 0o4755),
+}
 hardening = ["!cfi"]  # TODO
 # messes with filesystem
 options = ["!check"]

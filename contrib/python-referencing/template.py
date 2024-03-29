@@ -1,6 +1,6 @@
 pkgname = "python-referencing"
-pkgver = "0.33.0"
-pkgrel = 0
+pkgver = "0.34.0"
+pkgrel = 1
 build_style = "python_pep517"
 # the tests in suite/ depend on jsonschema
 make_check_args = ["referencing"]
@@ -25,11 +25,11 @@ depends = [
     "python-rpds-py",
 ]
 pkgdesc = "Implementation-agnostic implementation of JSON reference resolution"
-maintainer = "miko <mikoxyzzz@gmail.com>"
+maintainer = "Orphaned <orphaned@chimera-linux.org>"
 license = "MIT"
 url = "https://github.com/python-jsonschema/referencing"
 source = f"$(PYPI_SITE)/r/referencing/referencing-{pkgver}.tar.gz"
-sha256 = "c775fedf74bc0f9189c2a3be1c12fd03e8c23f4d371dce795df44e06c5b412f7"
+sha256 = "5773bd84ef41799a5a8ca72dc34590c041eb01bf9aa02632b4a973fb0181a844"
 
 
 def post_install(self):

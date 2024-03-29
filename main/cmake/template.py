@@ -1,7 +1,6 @@
 pkgname = "cmake"
-pkgver = "3.28.0"
-_actualver = "3.27.9"
-pkgrel = 1
+pkgver = "3.29.0"
+pkgrel = 0
 build_style = "configure"
 configure_args = [
     "--prefix=/usr",
@@ -26,8 +25,8 @@ pkgdesc = "Cross-platform, open source build system"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
 url = "https://cmake.org"
-source = f"https://www.cmake.org/files/v{_actualver[:-2]}/{pkgname}-{_actualver}.tar.gz"
-sha256 = "609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e"
+source = f"https://www.cmake.org/files/v{pkgver[:-2]}/{pkgname}-{pkgver}.tar.gz"
+sha256 = "a0669630aae7baa4a8228048bf30b622f9e9fd8ee8cedb941754e9e38686c778"
 # prevent cmake self-bootstrap false positive nonsense
 tool_flags = {
     "CXXFLAGS": ["-Wno-unused-command-line-argument"],

@@ -1,6 +1,6 @@
 pkgname = "delta"
-pkgver = "0.16.5"
-pkgrel = 0
+pkgver = "0.17.0"
+pkgrel = 1
 build_style = "cargo"
 hostmakedepends = ["cargo", "pkgconf"]
 makedepends = [
@@ -14,7 +14,9 @@ maintainer = "ttyyls <contact@behri.org>"
 license = "MIT"
 url = "https://github.com/dandavison/delta"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "00d4740e9da4f543f34a2a0503615f8190d307d1180dfb753b6911aa6940197f"
+sha256 = "1abd21587bcc1f2ef0cd342784ce990da9978bc345578e45506419e0952de714"
+# generates completions with host binary
+options = ["!cross"]
 
 
 def do_prepare(self):
@@ -29,8 +31,18 @@ def post_patch(self):
     cargo.setup_vendor(self)
 
 
+def post_build(self):
+    for shell in ["bash", "fish", "zsh"]:
+        with open(self.cwd / f"delta.{shell}", "w") as outf:
+            self.do(
+                f"target/{self.profile().triplet}/release/delta",
+                "--generate-completion",
+                shell,
+                stdout=outf,
+            )
+
+
 def post_install(self):
     self.install_license("LICENSE")
-    self.install_completion("etc/completion/completion.bash", "bash")
-    self.install_completion("etc/completion/completion.fish", "fish")
-    self.install_completion("etc/completion/completion.zsh", "zsh")
+    for shell in ["bash", "fish", "zsh"]:
+        self.install_completion(f"delta.{shell}", shell)

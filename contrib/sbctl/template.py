@@ -1,6 +1,6 @@
 pkgname = "sbctl"
 pkgver = "0.13"
-pkgrel = 0
+pkgrel = 1
 build_style = "go"
 make_build_args = ["./cmd/sbctl"]
 hostmakedepends = ["go", "asciidoc", "gmake"]
@@ -19,33 +19,15 @@ options = ["!cross"]
 def post_build(self):
     # Generate man page, bmake doesn't work
     self.do("gmake", "man")
-
-    # Generate bash completions
-    with open(self.cwd / "sbctl.bash", "w") as cf:
-        self.do(
-            self.make_dir + "/sbctl",
-            "completion",
-            "bash",
-            stdout=cf,
-        )
-
-    # Generate zsh completions
-    with open(self.cwd / "sbctl.zsh", "w") as cf:
-        self.do(
-            self.make_dir + "/sbctl",
-            "completion",
-            "zsh",
-            stdout=cf,
-        )
-
-    # Generate fish completions
-    with open(self.cwd / "sbctl.fish", "w") as cf:
-        self.do(
-            self.make_dir + "/sbctl",
-            "completion",
-            "fish",
-            stdout=cf,
-        )
+    # Generate completions
+    for shell in ["bash", "zsh", "fish"]:
+        with open(self.cwd / f"sbctl.{shell}", "w") as cf:
+            self.do(
+                f"{self.make_dir}/sbctl",
+                "completion",
+                shell,
+                stdout=cf,
+            )
 
 
 def post_install(self):

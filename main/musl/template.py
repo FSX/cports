@@ -1,8 +1,8 @@
 pkgname = "musl"
-pkgver = "1.2.4"
-pkgrel = 9
+pkgver = "1.2.5"
+pkgrel = 0
 _scudo_ver = "17.0.6"
-_commit = "4a16ddf53e7c634169d0a649782f8a724611f263"
+_commit = "v1.2.5"
 build_style = "gnu_configure"
 configure_args = ["--prefix=/usr", "--disable-gcc-wrapper"]
 configure_gen = []
@@ -17,12 +17,12 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "http://www.musl-libc.org"
 source = [
-    f"http://git.musl-libc.org/cgit/musl/snapshot/musl-{_commit}.tar.gz",
+    f"https://git.musl-libc.org/cgit/musl/snapshot/musl-{_commit}.tar.gz",
     f"https://github.com/llvm/llvm-project/releases/download/llvmorg-{_scudo_ver}/compiler-rt-{_scudo_ver}.src.tar.xz",
 ]
 source_paths = [".", "compiler-rt"]
 sha256 = [
-    "07ae7d46cc38a3c1319bb177648040951270b5d0a6d229d004c548b66b25c7b4",
+    "5829457efb2247c1e39920b14721b75e9c488a06149736c8317536ec4aa3764b",
     "11b8d09dcf92a0f91c5c82defb5ad9ff4acf5cf073a80c317204baa922d136b4",
 ]
 # scp makes it segfault

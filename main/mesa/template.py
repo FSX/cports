@@ -1,6 +1,6 @@
 pkgname = "mesa"
-pkgver = "24.0.1"
-pkgrel = 0
+pkgver = "24.0.3"
+pkgrel = 2
 build_style = "meson"
 configure_args = [
     "-Dglvnd=false",
@@ -15,7 +15,7 @@ configure_args = [
     "-Dshared-glapi=enabled",
     "-Dplatforms=x11,wayland",
     "-Dglx=dri",
-    "-Dvideo-codecs=h264dec,h264enc,h265dec,h265enc,vc1dec",
+    "-Dvideo-codecs=all",
     "-Ddefault_library=shared",
     "-Db_ndebug=true",
 ]
@@ -66,7 +66,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://www.mesa3d.org"
 source = f"https://mesa.freedesktop.org/archive/{pkgname}-{pkgver}.tar.xz"
-sha256 = "f387192b08c471c545590dd12230a2a343244804b5fe866fec6aea02eab57613"
+sha256 = "77aec9a2a37b7d3596ea1640b3cc53d0b5d9b3b52abed89de07e3717e91bfdbe"
 # lots of issues in swrast and so on
 hardening = ["!int"]
 # cba to deal with cross patching nonsense
@@ -265,6 +265,13 @@ def _xatracker(self):
     self.pkgdesc = "X acceleration library (shared library)"
 
     return ["usr/lib/libxatracker*.so.*"]
+
+
+@subpackage("mesa-gallium-nine", _have_nine)
+def _gallium_nine(self):
+    self.pkgdesc = "Mesa implementation of D3D9"
+
+    return ["usr/lib/d3d"]
 
 
 @subpackage("mesa-opencl", _have_opencl)

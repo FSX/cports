@@ -12,7 +12,7 @@ hostmakedepends = ["meson", "pkgconf"]
 makedepends = [
     "fontconfig-devel",
     "freetype-bootstrap",
-    "glib-devel",
+    "glib-bootstrap",
     "libpng-devel",
     "libx11-devel",
     "libxcb-devel",
@@ -22,7 +22,7 @@ makedepends = [
     "zlib-devel",
     "pixman-devel",
 ]
-checkdepends = ["ghostscript", "libpoppler-glib-devel", "librsvg-devel"]
+checkdepends = ["ghostscript", "libpoppler-devel", "librsvg-devel"]
 pkgdesc = "Vector graphics library with cross-device output support"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-or-later OR MPL-1.1"

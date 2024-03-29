@@ -1,5 +1,5 @@
 pkgname = "openjpeg"
-pkgver = "2.5.0"
+pkgver = "2.5.2"
 pkgrel = 0
 build_style = "cmake"
 # we skip static libs or they get referenced in cmake devel files
@@ -11,7 +11,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-2-Clause"
 url = "https://www.openjpeg.org"
 source = f"https://github.com/uclouvain/openjpeg/archive/v{pkgver}.tar.gz"
-sha256 = "0333806d6adecc6f7a91243b2b839ff4d2053823634d4f6ed7a59bc87409122a"
+sha256 = "90e3896fed910c376aaf79cdd98bdfdaf98c6472efd8e1debf0a854938cbda6a"
 hardening = ["!cfi"]  # TODO
 # missing test data
 options = ["!check"]
@@ -26,7 +26,7 @@ def _devel(self):
     # because cmake is dumb and references binaries in the find file
     self.depends += [f"openjpeg-progs={pkgver}-r{pkgrel}"]
 
-    return self.default_devel(extra=["usr/lib/openjpeg-2.*"])
+    return self.default_devel()
 
 
 @subpackage("openjpeg-progs")

@@ -1,5 +1,5 @@
 pkgname = "python-maturin"
-pkgver = "1.4.0"
+pkgver = "1.5.1"
 pkgrel = 0
 build_style = "python_pep517"
 make_build_env = {
@@ -18,16 +18,16 @@ makedepends = ["rust-std", "openssl-devel"]
 checkdepends = ["pytest"]
 depends = ["python-tomli"]
 pkgdesc = "Tool for building and publishing Rust-based Python packages"
-maintainer = "miko <mikoxyzzz@gmail.com>"
+maintainer = "Orphaned <orphaned@chimera-linux.org>"
 license = "Apache-2.0 OR MIT"
 url = "https://www.maturin.rs"
 source = f"https://github.com/PyO3/maturin/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "cd2cd3d465619bb997b41594398310e8b257d0c17854a58ca0598efa11e6d698"
+sha256 = "18198cc9421d04933586b9730abcdd80fe3484e209d2b8223aa7dc1f12c4c3fe"
 # yeah no
 options = ["!check"]
 
 
-def post_patch(self):
+def do_prepare(self):
     from cbuild.util import cargo
 
     self.cargo = cargo.Cargo(self)

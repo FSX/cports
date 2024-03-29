@@ -1,6 +1,6 @@
 # keep pkgver AND pkgrel in sync with qt6-qtwayland
 pkgname = "qt6-qtbase"
-pkgver = "6.6.2"
+pkgver = "6.6.3"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -69,7 +69,7 @@ license = (
 )
 url = "https://www.qt.io"
 source = f"https://download.qt.io/official_releases/qt/{pkgver[:-2]}/{pkgver}/submodules/qtbase-everywhere-src-{pkgver}.tar.xz"
-sha256 = "b89b426b9852a17d3e96230ab0871346574d635c7914480a2a27f98ff942677b"
+sha256 = "0493fd0b380c4edf8872f011a7f26d245aa4cdd75b349904ef340a22dedf7462"
 debug_level = 1  # defatten, especially with LTO
 # FIXME
 hardening = ["!int"]
@@ -147,6 +147,8 @@ def init_check(self):
         "tst_qsharedmemory",  # tst_QSharedMemory::simpleThreadedProducerConsumer(POSIX:5 consumers, producer is this) 'p.producer.isAttached()' returned FALSE
         "test_qt_extract_metatypes",  # fails to find qt6config.cmake in the test
         "test_qt_add_resources_rebuild",  # ditto
+        "test_collecting_plugins",  # unknown platform linux-clang
+        "test_standalone_test",  # can't find random .cmake file
     ]
     self.make_check_args += ["-E", "(" + "|".join(excl_list) + ")"]
     self.make_check_env["QT_QPA_PLATFORM"] = "offscreen"

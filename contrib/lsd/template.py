@@ -1,16 +1,16 @@
 pkgname = "lsd"
-pkgver = "1.0.0"
+pkgver = "1.1.2"
 pkgrel = 0
 build_style = "cargo"
-hostmakedepends = ["cargo"]
-makedepends = ["rust-std"]
+hostmakedepends = ["cargo", "pkgconf"]
+makedepends = ["libgit2-devel", "rust-std"]
 checkdepends = ["git"]
 pkgdesc = "Next gen ls command"
 maintainer = "aurelia <git@elia.garden>"
 license = "Apache-2.0"
 url = "https://github.com/lsd-rs/lsd"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "ab34e9c85bc77cfa42b43bfb54414200433a37419f3b1947d0e8cfbb4b7a6325"
+sha256 = "cd80dae9a8f6c4c2061f79084468ea6e04c372e932e3712a165119417960e14e"
 
 
 def post_install(self):

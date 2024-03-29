@@ -3,8 +3,10 @@
 
 # options related to your host apk
 [apk]
-# the apk command to use
+# the fallback apk command to use
 # also overridden by environment variable CBUILD_APK_PATH
+# this is used to bootstrap, but once we have a bldroot,
+# static apk from inside of it is used always
 command = apk
 
 # options related to building packages
@@ -27,6 +29,8 @@ cbuild_cache_path = cbuild_cache
 check = yes
 # whether checks are allowed to fail (by default they will abort build)
 check_fail = no
+# what type of compression to use by default for packages
+compression = deflate
 # number of jobs to use when building; all available threads by default
 jobs = 0
 # number of linker threads to use; jobs by default

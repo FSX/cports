@@ -18,6 +18,7 @@ opt_harch = None
 opt_gen_dbg = True
 opt_check = True
 opt_ccache = False
+opt_comp = "deflate"
 opt_makejobs = 0
 opt_lthreads = 0
 opt_nocolor = False
@@ -103,7 +104,7 @@ def handle_options():
     global opt_nonet, opt_dirty, opt_statusfd, opt_keeptemp, opt_forcecheck
     global opt_checkfail, opt_stage, opt_altrepo, opt_stagepath, opt_bldroot
     global opt_blddir, opt_pkgpath, opt_srcpath, opt_cchpath, opt_updatecheck
-    global opt_acceptsum
+    global opt_acceptsum, opt_comp
 
     # respect NO_COLOR
     opt_nocolor = ("NO_COLOR" in os.environ) or not sys.stdout.isatty()
@@ -309,6 +310,7 @@ def handle_options():
         opt_harch = bcfg.get("host_arch", fallback=opt_harch)
         opt_bldroot = bcfg.get("build_root", fallback=opt_bldroot)
         opt_blddir = bcfg.get("build_dir", fallback=opt_blddir)
+        opt_comp = bcfg.get("compression", fallback=opt_comp)
         opt_stagepath = bcfg.get("stage_repository", fallback=opt_stagepath)
         opt_altrepo = bcfg.get("alt_repository", fallback=opt_altrepo)
         opt_pkgpath = bcfg.get("repository", fallback=opt_pkgpath)
@@ -433,7 +435,7 @@ def init_late():
     import os
 
     from cbuild.core import paths, spdx
-    from cbuild.apk import sign
+    from cbuild.apk import sign, util as autil
 
     mainrepo = opt_altrepo
     altrepo = opt_pkgpath
@@ -471,6 +473,9 @@ def init_late():
 
     # register signing key
     sign.register_key(opt_signkey)
+
+    # set compression type
+    autil.set_compression(opt_comp)
 
 
 #
@@ -895,7 +900,7 @@ def do_lint(tgt):
         False,
         None,
         target="lint",
-    )
+    ).build_lint()
 
 
 def _collect_tmpls(pkgn, catn=None):
@@ -1825,6 +1830,7 @@ def _repo_check():
     global _repo_checked
     if _repo_checked:
         return
+    from cbuild.core import errors
     import subprocess
 
     if (
@@ -1838,6 +1844,7 @@ def _repo_check():
 
 
 def _collect_git(expr):
+    from cbuild.core import errors
     import subprocess
     import pathlib
 
@@ -1911,7 +1918,7 @@ def _collect_status(inf):
             pkgs.add(slist[0])
         else:
             match slist[1]:
-                case "broken" | "done" | "invalid" | "missing":
+                case "broken" | "ok" | "invalid" | "missing":
                     continue
                 case _:
                     pkgs.add(slist[0])
@@ -1920,6 +1927,8 @@ def _collect_status(inf):
 
 
 def _collect_blist(pkgs):
+    import sys
+
     rpkgs = []
     for pkg in pkgs:
         # empty args
@@ -1938,7 +1947,7 @@ def _collect_blist(pkgs):
                 rpkgs += _collect_status(inf)
             continue
         # files
-        if pkg.startswith("file:"):
+        if pkg.startswith("file:") and pkg != "file:-":
             with open(pkg.removeprefix("file:"), "r") as inf:
                 for ln in inf:
                     rpkgs += _collect_blist(ln.strip())
@@ -1948,7 +1957,7 @@ def _collect_blist(pkgs):
             rpkgs += pkg[5:].split()
             continue
         # stdin
-        if pkg == "-":
+        if pkg == "-" or pkg == "file:-":
             for ln in sys.stdin:
                 rpkgs += _collect_blist(ln.strip())
             continue
@@ -1994,7 +2003,7 @@ def do_bulkpkg(tgt, do_build=True, do_raw=False):
 
 
 def do_prepare_upgrade(tgt):
-    from cbuild.core import template, chroot, build
+    from cbuild.core import template, chroot, build, errors
     import pathlib
 
     if len(cmdline.command) < 2:
@@ -2065,7 +2074,7 @@ def do_prepare_upgrade(tgt):
 
 
 def do_bump_pkgrel(tgt):
-    from cbuild.core import chroot, logger, template
+    from cbuild.core import chroot, logger, template, errors
     import pathlib
 
     if len(cmdline.command) < 2:
@@ -2174,63 +2183,63 @@ def fire():
                 bootstrap(cmd)
             case "bootstrap-update":
                 bootstrap_update(cmd)
-            case "keygen":
-                do_keygen(cmd)
-            case "chroot":
-                do_chroot(cmd)
-            case "clean":
-                do_clean(cmd)
-            case "remove-autodeps":
-                do_remove_autodeps(cmd)
-            case "prune-obsolete":
-                do_prune_obsolete(cmd)
-            case "prune-removed":
-                do_prune_removed(cmd)
-            case "prune-pkgs":
-                do_prune_obsolete(cmd)
-                do_prune_removed(cmd)
-            case "prune-sources":
-                do_prune_sources(cmd)
-            case "relink-subpkgs":
-                do_relink_subpkgs(cmd)
-            case "index":
-                do_index(cmd)
-            case "zap":
-                do_zap(cmd)
-            case "lint":
-                do_lint(cmd)
-            case "cycle-check":
-                do_cycle_check(cmd)
-            case "update-check":
-                do_update_check(cmd)
-            case "dump":
-                do_dump(cmd)
-            case "print-build-graph":
-                do_print_build_graph(cmd)
-            case "print-unbuilt":
-                do_print_unbuilt(cmd, False)
-            case "list-unbuilt":
-                do_print_unbuilt(cmd, True)
-            case "fetch" | "extract" | "prepare":
-                do_pkg(cmd)
-            case "patch" | "configure" | "build":
-                do_pkg(cmd)
-            case "check" | "install" | "pkg":
-                do_pkg(cmd)
-            case "unstage":
-                do_unstage(cmd)
-            case "unstage-check-remote":
-                check_unstage(cmd)
             case "bulk-pkg":
                 do_bulkpkg(cmd)
             case "bulk-print":
                 do_bulkpkg(cmd, False)
             case "bulk-raw":
                 do_bulkpkg(cmd, True, True)
-            case "prepare-upgrade":
-                do_prepare_upgrade(cmd)
             case "bump-pkgrel":
                 do_bump_pkgrel(cmd)
+            case "check" | "install" | "pkg":
+                do_pkg(cmd)
+            case "chroot":
+                do_chroot(cmd)
+            case "clean":
+                do_clean(cmd)
+            case "cycle-check":
+                do_cycle_check(cmd)
+            case "dump":
+                do_dump(cmd)
+            case "fetch" | "extract" | "prepare":
+                do_pkg(cmd)
+            case "index":
+                do_index(cmd)
+            case "keygen":
+                do_keygen(cmd)
+            case "lint":
+                do_lint(cmd)
+            case "list-unbuilt":
+                do_print_unbuilt(cmd, True)
+            case "patch" | "configure" | "build":
+                do_pkg(cmd)
+            case "prepare-upgrade":
+                do_prepare_upgrade(cmd)
+            case "print-build-graph":
+                do_print_build_graph(cmd)
+            case "print-unbuilt":
+                do_print_unbuilt(cmd, False)
+            case "prune-pkgs":
+                do_prune_obsolete(cmd)
+                do_prune_removed(cmd)
+            case "prune-obsolete":
+                do_prune_obsolete(cmd)
+            case "prune-removed":
+                do_prune_removed(cmd)
+            case "prune-sources":
+                do_prune_sources(cmd)
+            case "relink-subpkgs":
+                do_relink_subpkgs(cmd)
+            case "remove-autodeps":
+                do_remove_autodeps(cmd)
+            case "unstage":
+                do_unstage(cmd)
+            case "unstage-check-remote":
+                check_unstage(cmd)
+            case "update-check":
+                do_update_check(cmd)
+            case "zap":
+                do_zap(cmd)
             case _:
                 logger.get().out_red(f"cbuild: invalid target {cmd}")
                 sys.exit(1)

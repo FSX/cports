@@ -1,6 +1,6 @@
 pkgname = "gnome-control-center"
-pkgver = "45.3"
-pkgrel = 1
+pkgver = "46.0.1"
+pkgrel = 0
 build_style = "meson"
 make_check_wrapper = ["weston-headless-run"]
 hostmakedepends = [
@@ -39,6 +39,7 @@ makedepends = [
     "libpwquality-devel",
     "libsecret-devel",
     "libsmbclient-devel",
+    "libsoup-devel",
     "libwacom-devel",
     "libx11-devel",
     "libxi-devel",
@@ -56,6 +57,7 @@ depends = [
     "gsettings-desktop-schemas",
     "power-profiles-daemon-meta",
     "sound-theme-freedesktop",
+    "system-config-printer",
     "tecla",
     "udisks",
 ]
@@ -64,8 +66,10 @@ pkgdesc = "GNOME control center"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://gitlab.gnome.org/GNOME/gnome-control-center"
-source = f"$(GNOME_SITE)/{pkgname}/{pkgver[:-2]}/{pkgname}-{pkgver}.tar.xz"
-sha256 = "b1e949c4e86c0624ec6a6ed0df09c9fae2b22983c1dca60ed86aec8ef0b24004"
+source = (
+    f"$(GNOME_SITE)/{pkgname}/{pkgver.split('.')[0]}/{pkgname}-{pkgver}.tar.xz"
+)
+sha256 = "53cfbc25156b5ca0b302531ebaeefd7f915f39b08aca143d5b0ec80855221fe4"
 
 
 @subpackage("gnome-control-center-devel")

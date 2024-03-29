@@ -16,6 +16,7 @@ import pathlib
 import contextlib
 import subprocess
 import builtins
+import stat
 
 from cbuild.core import logger, chroot, paths, profile, spdx, errors
 from cbuild.util import compiler, flock
@@ -323,7 +324,7 @@ class Package:
         if destp.is_dir():
             destp = destp / pathlib.Path(srcp).name
         if relative:
-            srcp = os.path.relpath(srcp, start=destp)
+            srcp = os.path.relpath(srcp, start=destp.parent)
         destp.symlink_to(srcp)
 
     def chmod(self, path, mode):
@@ -454,17 +455,18 @@ core_fields = [
     ("nostrip_files", [], list, False, True, False),
     ("hardening", [], list, False, True, False),
     ("nopie_files", [], list, False, True, False),
-    ("suid_files", [], list, False, True, False),
     ("tools", {}, dict, False, False, False),
     ("tool_flags", {}, dict, False, False, False),
     ("env", {}, dict, False, False, False),
     ("debug_level", 2, int, False, False, False),
     # packaging
+    ("origin", None, str, False, True, True),
     ("triggers", [], list, False, True, False),
     ("scriptlets", {}, dict, False, True, False),
     ("file_modes", {}, dict, False, True, False),
     ("file_xattrs", {}, dict, False, True, False),
     ("broken_symlinks", [], list, False, True, False),
+    ("compression", None, "comp", False, True, True),
     # wrappers
     ("exec_wrappers", [], list, False, False, False),
     # scriptlet generators
@@ -530,6 +532,7 @@ core_fields_priority = [
     ("install_if", True),
     ("triggers", True),
     ("scriptlets", True),
+    ("origin", True),
     ("pkgdesc", True),
     ("maintainer", True),
     ("license", True),
@@ -545,14 +548,13 @@ core_fields_priority = [
     ("protected_paths", True),
     ("nostrip_files", True),
     ("nopie_files", True),
-    ("suid_files", True),
     ("file_modes", True),
     ("file_xattrs", True),
     ("broken_symlinks", True),
+    ("compression", True),
     ("hardening", True),
     ("options", True),
     ("exec_wrappers", True),
-    # scriptlet-generating stuff comes last
     ("system_users", True),
     ("system_groups", True),
     ("restricted", True),
@@ -599,6 +601,26 @@ def copy_of_dval(val):
 def validate_type(val, tp):
     if not tp:
         return True
+    if tp == "comp":
+        if val is None:
+            return True
+        sv = val.split(":")
+        if len(sv) < 0 or len(sv) > 2:
+            return False
+        match sv[0]:
+            case "deflate" | "zstd":
+                if len(sv) == 2:
+                    try:
+                        iv = int(sv[1])
+                        if iv < 0 or iv > (9 if sv[0] == "deflate" else 22):
+                            return False
+                    except Exception:
+                        return False
+            case "none":
+                return len(sv) == 1
+            case _:
+                return False
+        return True
     if isinstance(tp, tuple):
         for rt in tp:
             if isinstance(val, rt):
@@ -628,9 +650,9 @@ class Template(Package):
         super().__init__()
 
         if origin:
-            self.origin = origin
+            self.origin_pkg = origin
         else:
-            self.origin = self
+            self.origin_pkg = self
 
         # default all the fields
         for fl, dval, tp, mand, sp, inh in core_fields:
@@ -1142,7 +1164,7 @@ class Template(Package):
             if pinfo.returncode == 0 and len(pinfo.stdout.strip()) > 0:
                 foundp = pinfo.stdout.strip().decode()
                 if foundp == f"{self.pkgname}-{self.pkgver}-r{self.pkgrel}":
-                    if self.origin == self and not quiet:
+                    if self.origin_pkg == self and not quiet:
                         # TODO: print the repo somehow
                         self.log(f"found ({pinfo.stdout.strip().decode()})")
                     return True
@@ -1305,6 +1327,10 @@ class Template(Package):
         if self.stage > 0 and name == "CFLAGS" or name == "CXXFLAGS":
             tfb = [
                 f"-ffile-prefix-map={self.chroot_builddir / self.wrksrc}=."
+            ] + tfb
+        if self.stage > 0 and name == "RUSTFLAGS":
+            tfb = [
+                f"--remap-path-prefix={self.chroot_builddir / self.wrksrc}=."
             ] + tfb
 
         return target._get_tool_flags(
@@ -1860,7 +1886,10 @@ class Subpackage(Package):
 def _subpkg_install_list(self, lst):
     def real_install():
         for it in lst:
-            self.take(it)
+            if it.startswith("?"):
+                self.take(it.removeprefix("?"), missing_ok=True)
+            else:
+                self.take(it)
 
     return real_install
 
@@ -1901,6 +1930,13 @@ def from_module(m, ret):
     # ensure pkgname is the same
     if ret.pkgname != prevpkg:
         ret.error(f"pkgname does not match template ({prevpkg})")
+
+    # ensure pkgname is lowercase
+    if ret.pkgname.lower() != ret.pkgname:
+        ret.error("package name must be lowercase")
+
+    # ensure origin is filled
+    ret.origin = ret.pkgname
 
     # possibly skip very early once we have the bare minimum info
     if (
@@ -2039,6 +2075,8 @@ def from_module(m, ret):
     for spn, spf in ret.subpackages:
         if spn in spdupes:
             ret.error(f"subpackage '{spn}' already exists")
+        if spn.lower() != spn:
+            ret.error(f"subpackage '{spn}' must be lowercase")
         spdupes[spn] = True
         sp = Subpackage(spn, ret)
         pinst = spf(sp)
@@ -2193,10 +2231,22 @@ def read_mod(
             if ignore_missing:
                 return None, None
             raise errors.CbuildException(f"missing template for '{pkgname}'")
-    elif not (paths.distdir() / pkgname / "template.py").is_file():
-        if ignore_missing:
-            return None, None
-        raise errors.CbuildException(f"missing template for '{pkgname}'")
+    else:
+        pnl = pkgname.split("/")
+        if len(pnl) == 3 and (pnl[2] == "template.py" or pnl[2] == ""):
+            psfx = pnl[2]
+            pnl = pnl[:-1]
+            if not ignore_missing:
+                logger.get().warn(f"the trailing '/{psfx}' is superfluous")
+        if len(pnl) != 2 and not ignore_missing:
+            raise errors.CbuildException(
+                f"template name '{pkgname}' has an invalid format"
+            )
+        pkgname = "/".join(pnl)
+        if not (paths.distdir() / pkgname / "template.py").is_file():
+            if ignore_missing:
+                return None, None
+            raise errors.CbuildException(f"missing template for '{pkgname}'")
 
     tmplp = (paths.distdir() / pkgname).resolve()
     pkgname = str(tmplp.relative_to(paths.distdir()))

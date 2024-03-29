@@ -61,11 +61,6 @@ def _subst_in(pat, rep, src, dest=None):
         shutil.move(nm, src)
 
 
-def _remove_ro(f, path, _):
-    os.chmod(path, stat.S_IWRITE)
-    f(path)
-
-
 def _prepare_etc():
     bfp = paths.distdir() / "main/base-files/files"
     tfp = paths.bldroot() / "etc"
@@ -109,6 +104,10 @@ def _prepare():
 
     if (paths.bldroot() / "usr/bin/update-ca-certificates").is_file():
         enter("update-ca-certificates", "--fresh")
+
+    # Create temporary files for the chroot
+    if (paths.bldroot() / "usr/bin/sd-tmpfiles").is_file():
+        enter("sd-tmpfiles", "--create", fakeroot=True)
 
     _prepare_etc()
 
@@ -251,7 +250,7 @@ def install():
     with flock.lock(lkp):
         irun = apki.call(
             "add",
-            ["--no-chown", "--no-scripts", "base-cbuild"],
+            ["--usermode", "--no-scripts", "base-cbuild"],
             "main",
             arch=host_cpu(),
         )
@@ -390,7 +389,7 @@ def _setup_dummy(rootp, archn):
 
         ret = apki.call(
             "add",
-            ["--no-scripts", "--no-chown", "--repository", tmpd, pkgn],
+            ["--no-scripts", "--usermode", "--repository", tmpd, pkgn],
             None,
             root=rootp,
             capture_output=True,
@@ -468,43 +467,19 @@ def remove_autodeps(bootstrapping, prof=None):
 
     paths.prepare()
 
-    if (
-        apki.call(
-            "info",
-            ["--installed", "autodeps-host"],
-            None,
-            capture_output=True,
-            allow_untrusted=True,
-        ).returncode
-        == 0
-    ):
-        del_ret = apki.call_chroot(
-            "del", ["autodeps-host"], None, capture_output=True
-        )
+    # clean world
+    with open(paths.bldroot() / "etc/apk/world", "w") as outf:
+        outf.write("base-cbuild\n")
 
-        if del_ret.returncode != 0:
-            log.out_plain(">> stderr (host):")
-            log.out_plain(del_ret.stderr.decode())
-            failed = True
+    # perform transaction
+    f_ret = apki.call_chroot(
+        "fix", [], None, capture_output=True, allow_untrusted=True
+    )
 
-    if (
-        apki.call(
-            "info",
-            ["--installed", "autodeps-target"],
-            None,
-            capture_output=True,
-            allow_untrusted=True,
-        ).returncode
-        == 0
-    ):
-        del_ret = apki.call_chroot(
-            "del", ["autodeps-target"], None, capture_output=True
-        )
-
-        if del_ret.returncode != 0:
-            log.out_plain(">> stderr (target):")
-            log.out_plain(del_ret.stderr.decode())
-            failed = True
+    if f_ret.returncode != 0:
+        log.out_plain(">> stderr (host):")
+        log.out_plain(f_ret.stderr.decode())
+        failed = True
 
     if prof and prof.cross:
         _prepare_arch(prof, False)
@@ -692,6 +667,8 @@ def enter(
         "/dev",
         "--proc",
         "/proc",
+        "--tmpfs",
+        "/run",
         "--tmpfs",
         "/tmp",
         "--tmpfs",

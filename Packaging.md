@@ -17,6 +17,7 @@ you should not rely on them or expect them to be stable.
     * [Hardening Templates](#template_hardening)
 * [Build Phases](#phases)
 * [Package Naming](#naming)
+  * [Bootstrap Packages](#bootstrap_packages)
 * [Filesystem Structure](#filesystem_structure)
 * [Template Structure](#template_structure)
   * [Template Variables](#template_variables)
@@ -679,6 +680,27 @@ example `powerpc64-linux-musl` (i.e. short triplet). These contain a
 simplified filesystem layout (the `usr` directory with the usual files
 and symlinks, and the `bin`, `lib` etc symlinks at top level).
 
+<a id="bootstrap_packages"></a>
+### Bootstrap Packages
+
+Packages with the suffix `-bootstrap` are special, provided they are not
+metapackages (`build_style = meta`). They will not be installable by default
+in a regular system and represent either bootstrap builds of various software
+needed to break dependency cycles in `cbuild` or bootstrap toolchains for
+various programming language compilers.
+
+Every package `foo-bootstrap` gains an implicit dependency on `bootstrap:foo`.
+This package is not provided by anything. Whenever `cbuild` sees a bootstrap
+package in its `hostmakedepends` or `makedepends`, it will implicitly create
+a virtual package in the current build environment to allow such package to
+be installed.
+
+You can do so in your own environment like such:
+
+```
+$ apk add --virtual bootstrap:foo
+```
+
 <a id="template_structure"></a>
 ## Template Structure
 
@@ -722,6 +744,7 @@ These variables are mandatory:
   it themselves. License exceptions can be from the standard list or they
   can be custom as well, e.g. `GPL-2.0-or-later WITH custom:foo-exception`.
 * `pkgname` *(str)* The primary package name, must match template name.
+  It must be lowercase, likewise for subpackages.
 * `pkgver` *(str)* The package version, applies to all subpackages. Must
   follow the correct format for the `apk` package manager.
 * `pkgrel` *(int)* The release number for the package. When changes are
@@ -758,6 +781,10 @@ Keep in mind that default values may be overridden by build styles.
   run tests, in order to ensure a reproducible build environment. It mostly
   exists to visually separate dependencies only needed for tests from
   the others.
+* `compression` *(str)* Specifies the package compression. The default is
+  unspecified (which means the global default will be used). Currently this
+  can be `deflate`, `zstd`, and `none`, optionally with a compression level
+  for the former two like `deflate:9` or `zstd:3`.
 * `configure_args` *(list)* This list is generally specific to the build
   system the template uses. Generally speaking, it provides the arguments
   passed to some kind of `configure` script.
@@ -802,10 +829,13 @@ Keep in mind that default values may be overridden by build styles.
   and optionally the recursive flag (`True` or `False`). The third field
   is a regular permissions integer, e.g. `0o755`. This can be used when
   the package creates a new group or user and needs to have files that
-  are owned by that. Keep in mind that the `suid` checks and so on still
-  happen, so if you make the permissions `suid`, you also need to declare
-  the file in `suid_files`. The permissions are applied in the order the
-  fields are added in the dictionary.
+  are owned by that. The permissions are applied in the order the
+  fields are added in the dictionary. Note that all setuid/setgid files
+  as well as files with xattrs in the security namespace must have an
+  explicit mode set here, otherwise they will not be allowed. That means
+  any suid file installed by a package without the template re-declaring
+  its mode is forbidden; the primary purpose is to make sure the packager
+  knows what kind of mode it needs to have.
 * `file_xattrs` *(dict)* A dictionary of strings to dictionaries, where
   the string keys are file paths (relative to the package, e.g. `usr/foo`)
   and the dicts contain mappings of extended attribute names to values.
@@ -819,6 +849,8 @@ Keep in mind that default values may be overridden by build styles.
   not use `setfattr` but `setcap` instead. For extended attributes to work
   here, you need to have the right host programs (`setfattr` or `setcap`)
   installed in the package build environment via `hostmakedepends`.
+  If setting the security namespace, `file_modes` entry must also be
+  declared, see above.
 * `hardening` *(list)* Hardening options to be enabled or disabled for the
   template. Refer to the hardening section for more information. This is
   a simple list of strings that works similarly to `options`, with `!`
@@ -900,6 +932,15 @@ Keep in mind that default values may be overridden by build styles.
 * `options` *(list)* Various boolean toggles for the template. It is a list
   of strings; a string `foo` toggles the option on, while `!foo` does the
   opposite. Every permissible option has a default.
+* `origin` *(str)* This can be optionally specified and it's a package
+  name (without a version). Normally, the origin for primary package is
+  itself, and for subpackage it's its primary package. This can be overridden
+  for instance when what would normally be a subpackage is split off into
+  a separate template. It primarily affects the implicit replaces behavior
+  related to other packages of the same origin. It inherits into subpackages.
+  The primary use for this is to give all "defaults" packages providing
+  alternative program symlinks the same origin so they can replace each other
+  freely without errors.
 * `patch_args` *(list)* Options passed to `patch` when applying patches,
   in addition to the builtin ones (`-sNp1 -V none`). You can use this to
   override the strip count or pass additional options.
@@ -960,9 +1001,6 @@ Keep in mind that default values may be overridden by build styles.
   string or `.` implies default behavior. Effectively all sources that have
   a path that is not the default will be extracted separately and then moved
   into place.
-* `suid_files` *(list)* A list of glob patterns (strings). The system will
-  reject any `setuid` and `setgid` files that do not match at least one
-  pattern in this list.
 * `tools` *(dict)* This can be used to override default tools. Refer to the
   section about tools for more information.
 * `tool_flags` *(dict)* This can be used to override things such as `CFLAGS`
@@ -1321,8 +1359,9 @@ def _subpkg(self):
     ...
 ```
 
-The function name is up to you, it does not matter. In order to cover more
-cases, the subpackage definition can also be conditional:
+The function name is up to you, it does not matter. The subpackage name follows
+the same conventions as the main package (notably, it must be lowercase).
+In order to cover more cases, the subpackage definition can also be conditional:
 
 ```
 @subpackage("mysubpackage", foo == bar)
@@ -1355,6 +1394,11 @@ package. This is why subpackage ordering can be important; sometimes
 some files may overlap and you may need to ensure some subpackages
 "steal" their files first.
 
+Any list entries that start with a question mark, e.g. `"?usr/foo"`, are
+optional (i.e. that path may be missing). This is useful for programatically
+generated subpackages (when multiple subpackages are generated from some kind
+of input list and they share the general layout but not the exact contents).
+
 The `self` argument here is the subpackage handle.
 
 If better control over the files is needed, you can also return a function
@@ -1373,9 +1417,9 @@ those are explicitly marked.
 * `nostrip_files`
 * `hardening`
 * `nopie_files`
+* `file_modes`
 * `shlib_provides`
 * `shlib_requires`
-* `suid_files`
 * `triggers`
 
 The `hardening` option does not actually do anything (since subpackages do

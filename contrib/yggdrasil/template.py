@@ -1,11 +1,11 @@
 pkgname = "yggdrasil"
 pkgver = "0.5.5"
-pkgrel = 0
+pkgrel = 1
 build_style = "go"
 make_build_args = [
     "-ldflags="
-    f" -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildName={pkgname}"
-    f" -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildVersion={pkgver}",
+    + f" -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildName={pkgname}"
+    + f" -X github.com/yggdrasil-network/yggdrasil-go/src/version.buildVersion={pkgver}",
     "./cmd/yggdrasil/",
     "./cmd/yggdrasilctl/",
 ]

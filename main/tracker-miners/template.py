@@ -1,6 +1,6 @@
 pkgname = "tracker-miners"
-pkgver = "3.6.2"
-pkgrel = 1
+pkgver = "3.7.1"
+pkgrel = 0
 build_style = "meson"
 configure_args = [
     # TODO: user services with dinit?
@@ -13,6 +13,7 @@ configure_args = [
     # features
     "-Dminer_rss=false",  # libgrss hasn't been touched in a while
     "-Dplaylist=enabled",
+    "-Dlandlock=enabled",
     "-Dexif=enabled",
     "-Djpeg=enabled",
     "-Dtiff=enabled",
@@ -49,7 +50,7 @@ makedepends = [
     "libtiff-devel",
     "giflib-devel",
     "libxml2-devel",
-    "libpoppler-glib-devel",
+    "libpoppler-devel",
     "upower-devel",
     "exempi-devel",
     "networkmanager-devel",
@@ -66,6 +67,6 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://gnome.pages.gitlab.gnome.org/tracker"
 source = f"$(GNOME_SITE)/{pkgname}/{pkgver[:-2]}/{pkgname}-{pkgver}.tar.xz"
-sha256 = "0ad722f3d532c21d757cf488f942960679ea8f457925efa97656ed4c9e9ba4ff"
+sha256 = "50a3abe40cfb0b35ced43ec716dbf1368992e444ef7a0babf202c7ac6ab2f6f4"
 # check relies on stuff unsupported in chroot
 options = ["!check", "!cross"]

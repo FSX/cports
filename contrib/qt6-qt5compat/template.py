@@ -1,19 +1,19 @@
 pkgname = "qt6-qt5compat"
-pkgver = "6.6.2"
+pkgver = "6.6.3"
 pkgrel = 0
 build_style = "cmake"
+# FIXME: times out after 5 minutes on aarch64
+make_check_args = ["-E", "tst_qxmlinputsource"]
 hostmakedepends = ["cmake", "ninja", "pkgconf", "qt6-qtbase"]
 makedepends = ["qt6-qtdeclarative-devel"]
-pkgdesc = "Module containing unsuppored Qt5 APIs"
+pkgdesc = "Module containing unsupported Qt5 APIs"
 maintainer = "aurelia <git@elia.garden>"
 license = (
     "LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only WITH Qt-GPL-exception-1.0"
 )
 url = "https://www.qt.io"
 source = f"https://download.qt.io/official_releases/qt/{pkgver[:-2]}/{pkgver}/submodules/qt5compat-everywhere-src-{pkgver}.tar.xz"
-sha256 = "e07b08ab7658e4856f07e3262ab342df4ed7e7a69f2720e56bb2128729191967"
-# TODO
-options = ["!check"]
+sha256 = "68c2cf4e5eabfea27626fe40d088cb0dbb2c0414d3961ef132b7e06c60ceec0b"
 
 
 def post_install(self):

@@ -1,5 +1,5 @@
 pkgname = "pcsx2"
-pkgver = "1.7.5571"
+pkgver = "1.7.5640"
 pkgrel = 0
 # pcsx2 doesn't support anything else
 archs = ["x86_64"]
@@ -52,17 +52,15 @@ pkgdesc = "Playstation 2 emulator"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "GPL-3.0-or-later AND LGPL-3.0-or-later"
 url = "https://pcsx2.net"
-_patches = "958d1c0ba868642e5c7557a7b7eab61dab123182"
+_patches = "f15daef9e6a7044c55f3d7b2deccbb2e9928feb0"
 _glslang = "11.12.0"
 _gtest = "v1.14.0"
-_rcheevos = "3cadf84c30bbc050c0fec79d26e1c8ff504bda42"
-_fastfloat = "v6.1.0"
+_fastfloat = "v6.1.1"
 source = [
     f"https://github.com/PCSX2/pcsx2/archive/refs/tags/v{pkgver}.tar.gz",
     f"https://github.com/PCSX2/pcsx2_patches/archive/{_patches}.tar.gz",
     f"https://github.com/KhronosGroup/glslang/archive/{_glslang}.tar.gz",
     f"https://github.com/google/googletest/archive/refs/tags/{_gtest}.tar.gz",
-    f"https://github.com/RetroAchievements/rcheevos/archive/{_rcheevos}.tar.gz",
     f"https://github.com/fastfloat/fast_float/archive/refs/tags/{_fastfloat}.tar.gz",
 ]
 source_paths = [
@@ -70,16 +68,14 @@ source_paths = [
     "patches",
     "3rdparty/glslang/glslang",
     "3rdparty/gtest",
-    "3rdparty/rcheevos/rcheevos",
     "3rdparty/fast_float",
 ]
 sha256 = [
-    "3564b0716846be582ffb51295d5741368340766dfd21c2c3fc8aaa76da085d07",
-    "bcae748a2d3a41738cb18d419a3ae5a62095bd3e1660198c6a3986a0be6213e6",
+    "a1b65d6738e82bed95913947be908121767b8bc0491e0abcb58d807184e84f97",
+    "aca85b4d4b628dbeca79e24c275b4d84d1766c89301a9aa2b77a009da00cab19",
     "7795a97450fecd9779f3d821858fbc2d1a3bf1dd602617d95b685ccbcabc302f",
     "8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7",
-    "f2e623936167b7300c4b65abf6ea096218d2492310438eb3932a76b3cc804ecb",
-    "a9c8ca8ca7d68c2dbb134434044f9c66cfd4c383d5e85c36b704d30f6be82506",
+    "10159a4a58ba95fe9389c3c97fe7de9a543622aa0dcc12dd9356d755e9a94cb4",
 ]
 # FIXME: cfi, int
 # but it's an emulator so..

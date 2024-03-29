@@ -1,5 +1,5 @@
 pkgname = "yq"
-pkgver = "4.41.1"
+pkgver = "4.43.1"
 pkgrel = 0
 build_style = "go"
 hostmakedepends = ["go"]
@@ -9,7 +9,7 @@ maintainer = "ttyyls <contact@behri.org>"
 license = "MIT"
 url = "https://github.com/mikefarah/yq"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "25d61e72887f57510f88d1a30d515c7e2d79e7c6dce5c96aea7c069fcbc089e7"
+sha256 = "e5581d28bae2bcdf70501dfd251233c592eb3e39a210956ee74965b784435d63"
 # generates completions with host binary
 options = ["!cross"]
 
@@ -19,12 +19,13 @@ def do_check(self):
     self.do("scripts/acceptance.sh")
 
 
+def post_build(self):
+    for shell in ["bash", "fish", "zsh"]:
+        with open(self.cwd / f"yq.{shell}", "w") as outf:
+            self.do("build/yq", "shell-completion", shell, stdout=outf)
+
+
 def post_install(self):
     self.install_license("LICENSE")
     for shell in ["bash", "fish", "zsh"]:
-        self.do(
-            "sh",
-            "-c",
-            f"{self.chroot_cwd}/build/yq shell-completion {shell} > yq.{shell}",
-        )
         self.install_completion(f"yq.{shell}", shell)

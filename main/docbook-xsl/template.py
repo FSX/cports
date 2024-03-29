@@ -1,6 +1,6 @@
 pkgname = "docbook-xsl"
 pkgver = "1.79.2"
-pkgrel = 1
+pkgrel = 3
 depends = ["xmlcatmgr", "docbook-xml"]
 pkgdesc = "Docbook XSL modular stylesheet"
 maintainer = "q66 <q66@chimera-linux.org>"

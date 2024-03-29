@@ -1,5 +1,5 @@
 pkgname = "starship"
-pkgver = "1.17.1"
+pkgver = "1.18.1"
 pkgrel = 0
 build_style = "cargo"
 make_build_args = [
@@ -25,17 +25,23 @@ url = "https://starship.rs"
 source = (
     f"https://github.com/starship/starship/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "2b2fc84feb0197104982e8baf17952449375917da66b7a98b3e3fd0be63e5dba"
+sha256 = "2ab61ae3d2e256266191f670a76a35fd06310ada2777efa0f2b6d2602071d13b"
 # generates completions with host binary
 options = ["!cross"]
+
+
+def post_build(self):
+    for shell in ["bash", "fish", "zsh"]:
+        with open(self.cwd / f"starship.{shell}", "w") as outf:
+            self.do(
+                f"target/{self.profile().triplet}/release/starship",
+                "completions",
+                shell,
+                stdout=outf,
+            )
 
 
 def post_install(self):
     self.install_license("LICENSE")
     for shell in ["bash", "fish", "zsh"]:
-        self.do(
-            "sh",
-            "-c",
-            f"{self.chroot_cwd}/target/{self.profile().triplet}/release/starship completions {shell} > starship.{shell}",
-        )
         self.install_completion(f"starship.{shell}", shell)

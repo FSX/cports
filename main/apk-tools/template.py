@@ -1,7 +1,7 @@
 pkgname = "apk-tools"
-pkgver = "3.0.0_pre2"
+pkgver = "3.0.0_pre4"
 pkgrel = 1
-_gitrev = "c8c9df1825760e558f44397500af2a2f4bca18d4"
+_gitrev = "c6d0ee842a2596bdfd5dcfba9f9b182696e00013"
 build_style = "meson"
 configure_args = ["-Dlua=disabled", "-Dstatic_apk=true", "-Dlua_version=5.4"]
 hostmakedepends = ["pkgconf", "meson", "lua5.4", "lua5.4-zlib", "scdoc"]
@@ -16,11 +16,11 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-only"
 url = "http://git.alpinelinux.org/cgit/apk-tools"
 source = f"https://gitlab.alpinelinux.org/alpine/{pkgname}/-/archive/{_gitrev}.tar.gz"
-sha256 = "5f01de0805649b6f77a88351a7e08c4b6b5b51e1bb1354f517dae6f158f5b217"
+sha256 = "050de2b6c2be4681074fe0f2b29f14be2fdcca10e508867a9c8af864f0ea8ae7"
 options = ["bootstrap"]
 
 if self.stage > 0:
-    makedepends += ["linux-headers", "musl-devel-static"]
+    makedepends += ["linux-headers", "musl-devel-static", "zstd-devel-static"]
     if self.stage > 1:
         depends = ["ca-certificates"]
 else:
@@ -28,6 +28,7 @@ else:
         "-Dhelp=disabled",
         "-Ddocs=disabled",
         "-Dstatic_apk=false",
+        "-Dzstd=false",
     ]
 
 
