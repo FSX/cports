@@ -48,6 +48,7 @@ license = "BSD-3-Clause"
 url = "https://heimdal.software"
 source = f"https://github.com/heimdal/heimdal/releases/download/{pkgname}-{pkgver}/{pkgname}-{pkgver}.tar.gz"
 sha256 = "fd87a207846fa650fd377219adc4b8a8193e55904d8a752c2c3715b4155d8d38"
+options = ["linkundefver"]
 exec_wrappers = [("/usr/bin/mandoc", "nroff")]
 
 if self.profile().endian == "big":
@@ -83,9 +84,9 @@ def post_install(self):
     self.rm(self.destdir / "usr/share/man/man8/ipropd-master.8")
     self.rm(self.destdir / "usr/share/man/man8/ipropd-slave.8")
     self.rm(self.destdir / "usr/share/man/man5/qop.5")
-    self.install_link("iprop.8", "usr/share/man/man8/ipropd-master.8")
-    self.install_link("iprop.8", "usr/share/man/man8/ipropd-slave.8")
-    self.install_link("mech.5", "usr/share/man/man5/qop.5")
+    self.install_link("usr/share/man/man8/ipropd-master.8", "iprop.8")
+    self.install_link("usr/share/man/man8/ipropd-slave.8", "iprop.8")
+    self.install_link("usr/share/man/man5/qop.5", "mech.5")
 
 
 def _genlib(pkgn, desc):

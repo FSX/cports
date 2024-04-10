@@ -190,6 +190,7 @@ class Package:
         self.logger = logger.get()
         self.pkgname = None
         self.pkgver = None
+        self.alternative = None
 
     def log(self, msg, end="\n"):
         self.logger.out(self._get_pv() + ": " + msg, end)
@@ -1314,33 +1315,8 @@ class Template(Package):
     def get_tool_flags(
         self, name, extra_flags=[], hardening=[], shell=False, target=None
     ):
-        target = pkg_profile(self, target)
-
-        if name in self.tool_flags:
-            tfb = self.tool_flags[name] + extra_flags
-        else:
-            tfb = extra_flags
-
-        dodbg = self.build_dbg and self.options["debug"]
-
-        # stop trashing ccache upon minor version changes
-        if self.stage > 0 and name == "CFLAGS" or name == "CXXFLAGS":
-            tfb = [
-                f"-ffile-prefix-map={self.chroot_builddir / self.wrksrc}=."
-            ] + tfb
-        if self.stage > 0 and name == "RUSTFLAGS":
-            tfb = [
-                f"--remap-path-prefix={self.chroot_builddir / self.wrksrc}=."
-            ] + tfb
-
-        return target._get_tool_flags(
-            name,
-            tfb,
-            self.debug_level if dodbg else -1,
-            self.hardening + hardening,
-            self.options,
-            self.stage,
-            shell,
+        return pkg_profile(self, target)._get_tool_flags(
+            self, name, extra_flags, hardening, shell
         )
 
     def get_cflags(
@@ -1401,9 +1377,7 @@ class Template(Package):
     def has_hardening(self, hname, target=None):
         target = pkg_profile(self, target)
 
-        return profile.has_hardening(
-            target, hname, self.hardening, self.options, self.stage
-        )
+        return profile.get_hardening(target, self)[hname]
 
     def has_lto(self, target=None):
         target = pkg_profile(self, target)
@@ -1566,7 +1540,7 @@ class Template(Package):
             if enable:
                 self.install_dir("usr/lib/dinit.d/user/boot.d")
                 self.install_link(
-                    f"../{svname}", f"usr/lib/dinit.d/user/boot.d/{svname}"
+                    f"usr/lib/dinit.d/user/boot.d/{svname}", f"../{svname}"
                 )
         else:
             svname = name or src.name
@@ -1574,25 +1548,31 @@ class Template(Package):
             if enable:
                 self.install_dir("usr/lib/dinit.d/boot.d")
                 self.install_link(
-                    f"../{svname}", f"usr/lib/dinit.d/boot.d/{svname}"
+                    f"usr/lib/dinit.d/boot.d/{svname}", f"../{svname}"
                 )
 
     def install_svscript(self, src, name=None):
         self.install_file(src, "etc/dinit.d/scripts", mode=0o755, name=name)
 
-    def install_link(self, src, dest):
+    def install_link(self, dest, tgt, absolute=False):
         dest = pathlib.Path(dest)
         if dest.is_absolute():
             raise errors.TracebackException(
                 f"install_link: path '{dest}' must not be absolute"
             )
         dest = self.destdir / dest
-        dest.symlink_to(src)
+        if not absolute and str(tgt).startswith("/"):
+            raise errors.TracebackException(
+                f"install_link: target '{tgt}' must not be absolute"
+            )
+        dest.symlink_to(tgt)
 
     def install_shell(self, *args):
         self.install_dir("etc/shells.d")
         for s in args:
-            self.install_link(s, f"etc/shells.d/{os.path.basename(s)}")
+            self.install_link(
+                f"etc/shells.d/{os.path.basename(s)}", s, absolute=True
+            )
 
 
 def _default_take_extra(self, extra):
@@ -1696,7 +1676,7 @@ autopkgs = [
 
 
 class Subpackage(Package):
-    def __init__(self, name, parent, oldesc=None):
+    def __init__(self, name, parent, oldesc=None, alternative=None):
         super().__init__()
 
         self.pkgname = name
@@ -1707,6 +1687,7 @@ class Subpackage(Package):
         self.pkgrel = parent.pkgrel
         self.statedir = parent.statedir
         self.build_style = parent.build_style
+        self.alternative = alternative
 
         self.destdir = (
             parent.rparent.destdir_base / f"{self.pkgname}-{self.pkgver}"
@@ -1799,6 +1780,12 @@ class Subpackage(Package):
                 pathlib.Path(fullp).relative_to(pdest), self.destdir, pdest
             )
 
+    def make_link(self, path, tgt):
+        dstp = self.destdir / path
+        self.log(f"symlink: {dstp} -> {tgt}")
+        self.mkdir(dstp.parent, parents=True)
+        self.ln_s(tgt, dstp)
+
     def take_static(self):
         self.take("usr/lib/*.a")
 
@@ -1888,6 +1875,11 @@ def _subpkg_install_list(self, lst):
         for it in lst:
             if it.startswith("?"):
                 self.take(it.removeprefix("?"), missing_ok=True)
+            elif it.startswith("@"):
+                sd = it.removeprefix("@").split("=>")
+                if len(sd) != 2 or len(sd[0]) == 0 or len(sd[1]) == 0:
+                    self.error(f"malformed symlink spec '{it}'")
+                self.make_link(*sd)
             else:
                 self.take(it)
 
@@ -2072,13 +2064,15 @@ def from_module(m, ret):
 
     spdupes = {}
     # link subpackages and fill in their fields
-    for spn, spf in ret.subpackages:
+    for spn, spf, spa in ret.subpackages:
+        if spa:
+            spn = f"{spa}-{spn}-default"
         if spn in spdupes:
             ret.error(f"subpackage '{spn}' already exists")
         if spn.lower() != spn:
             ret.error(f"subpackage '{spn}' must be lowercase")
         spdupes[spn] = True
-        sp = Subpackage(spn, ret)
+        sp = Subpackage(spn, ret, alternative=spa)
         pinst = spf(sp)
         if isinstance(pinst, list):
             sp.pkg_install = _subpkg_install_list(sp, pinst)
@@ -2233,11 +2227,8 @@ def read_mod(
             raise errors.CbuildException(f"missing template for '{pkgname}'")
     else:
         pnl = pkgname.split("/")
-        if len(pnl) == 3 and (pnl[2] == "template.py" or pnl[2] == ""):
-            psfx = pnl[2]
+        if len(pnl) == 3 and pnl[2] == "":
             pnl = pnl[:-1]
-            if not ignore_missing:
-                logger.get().warn(f"the trailing '/{psfx}' is superfluous")
         if len(pnl) != 2 and not ignore_missing:
             raise errors.CbuildException(
                 f"template name '{pkgname}' has an invalid format"
@@ -2273,11 +2264,11 @@ def read_mod(
 
     ret._target_profile = ret._current_profile
 
-    def subpkg_deco(spkgname, cond=True):
+    def subpkg_deco(spkgname, cond=True, alternative=None):
         def deco(f):
             ret.all_subpackages.append(spkgname)
             if cond:
-                ret.subpackages.append((spkgname, f))
+                ret.subpackages.append((spkgname, f, alternative))
 
         return deco
 

@@ -1,6 +1,6 @@
 pkgname = "ladspa-sdk"
 pkgver = "1.17"
-pkgrel = 0
+pkgrel = 1
 hostmakedepends = ["gmake"]
 makedepends = ["libsndfile-devel"]
 pkgdesc = "Linux Audio Developer's Simple Plugin API (LADSPA)"
@@ -32,7 +32,7 @@ def do_install(self):
     self.install_dir("usr/share/doc")
     self.cp("doc", self.destdir / "usr/share/doc/ladspa-sdk", recursive=True)
     self.install_link(
-        "/usr/include/ladspa.h", "usr/share/doc/ladspa-sdk/ladspa.h.txt"
+        "usr/share/doc/ladspa-sdk/ladspa.h.txt", "../../../include/ladspa.h"
     )
 
 

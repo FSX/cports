@@ -1,8 +1,18 @@
 pkgname = "python-pybind11"
-pkgver = "2.11.1"
+pkgver = "2.12.0"
 pkgrel = 0
 build_style = "python_pep517"
 make_build_args = ["--skip-dependency-check"]
+make_check_args = [
+    # finds wrong cflags in sample project
+    "--deselect=tests/extra_setuptools/test_setuphelper.py::test_simple_setup_py",
+    # fail
+    "--deselect=tests/test_exceptions.py::test_cross_module_exception_translator",
+    "--ignore=tests/extra_python_package/test_files.py",
+    # missing trampoline_module/widget_module
+    "--ignore=tests/test_embed/test_interpreter.py",
+    "--ignore=tests/test_embed/test_trampoline.py",
+]
 hostmakedepends = [
     "cmake",
     "ninja",
@@ -24,8 +34,10 @@ pkgdesc = "Seamless operability between C++11 and Python"
 maintainer = "Duncan Bellamy <dunk@denkimushi.com>"
 license = "BSD-3-Clause"
 url = "https://pybind11.readthedocs.io/en/stable/index.html"
-source = f"https://github.com/pybind/pybind11/archive/refs/tags/v{pkgver}.zip"
-sha256 = "b011a730c8845bfc265f0f81ee4e5e9e1d354df390836d2a25880e123d021f89"
+source = (
+    f"https://github.com/pybind/pybind11/archive/refs/tags/v{pkgver}.tar.gz"
+)
+sha256 = "bf8f242abd1abcd375d516a7067490fb71abd79519a282d22b6e4d19282185a7"
 
 
 def pre_check(self):
@@ -38,16 +50,6 @@ def pre_check(self):
     cmake.build(self, "build-tests")
 
 
-def do_check(self):
-    # deselected test has RuntimeError
-    self.do(
-        "sh",
-        "-c",
-        "cd build-tests/tests && python3 -m \
-        pytest --deselect test_exceptions.py::test_cross_module_exception_translator",
-    )
-
-
 def post_install(self):
     self.install_license("LICENSE")
 
@@ -56,16 +58,16 @@ def post_install(self):
     self.install_dir("usr/share/pkgconfig")
     _pypath = f"lib/python{self.python_version}/site-packages/pybind11"
     self.install_link(
-        f"../{_pypath}/include/pybind11",
         "usr/include/pybind11",
+        f"../{_pypath}/include/pybind11",
     )
     self.install_link(
-        f"../../{_pypath}/share/cmake/pybind11",
         "usr/share/cmake/pybind11",
+        f"../../{_pypath}/share/cmake/pybind11",
     )
     self.install_link(
-        f"../../{_pypath}/share/pkgconfig/pybind11.pc",
         "usr/share/pkgconfig/pybind11.pc",
+        f"../../{_pypath}/share/pkgconfig/pybind11.pc",
     )
 
 

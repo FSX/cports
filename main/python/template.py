@@ -1,8 +1,9 @@
 # update pyver in autosplit logic and pre_pkg hook on major bumps
 pkgname = "python"
 _majver = "3.12"
+# .3 segfaults in ppc64le tests
 pkgver = f"{_majver}.2"
-pkgrel = 1
+pkgrel = 2
 build_style = "gnu_configure"
 configure_args = [
     "--enable-shared",
@@ -117,9 +118,9 @@ def do_install(self):
         self.files_path / "EXTERNALLY-MANAGED", f"usr/lib/python{_majver}"
     )
 
-    self.install_link("pydoc" + _majver, "usr/bin/pydoc")
-    self.install_link("python" + _majver, "usr/bin/python")
-    self.install_link("python" + _majver + ".1", "usr/share/man/man1/python.1")
+    self.install_link("usr/bin/pydoc", "pydoc" + _majver)
+    self.install_link("usr/bin/python", "python" + _majver)
+    self.install_link("usr/share/man/man1/python.1", "python" + _majver + ".1")
 
 
 @subpackage("python-devel")

@@ -1,6 +1,6 @@
 pkgname = "helix"
-pkgver = "23.10"
-pkgrel = 0
+pkgver = "24.03"
+pkgrel = 1
 build_style = "cargo"
 hostmakedepends = ["cargo", "git"]
 makedepends = ["rust-std"]
@@ -9,7 +9,7 @@ maintainer = "Wesley Moore <wes@wezm.net>"
 license = "MPL-2.0"
 url = "https://github.com/helix-editor/helix"
 source = f"{url}/releases/download/{pkgver}/helix-{pkgver}-source.tar.xz"
-sha256 = "4e7bcac200b1a15bc9f196bdfd161e4e448dc670359349ae14c18ccc512153e8"
+sha256 = "c59a5988f066c2ab90132e03a0e6b35b3dd89f48d3d78bf0ec81bd7d88c7677e"
 
 
 def do_install(self):
@@ -17,7 +17,7 @@ def do_install(self):
     runtime_dir = "usr/libexec/helix/runtime"
     self.install_dir(runtime_dir)
     self.mv(self.destdir / "usr/bin/hx", self.destdir / "usr/libexec/helix")
-    self.install_link("/usr/libexec/helix/hx", "usr/bin/hx")
+    self.install_link("usr/bin/hx", "../libexec/helix/hx")
 
     self.install_files("runtime/queries", runtime_dir)
     self.install_files("runtime/themes", runtime_dir)

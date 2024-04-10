@@ -1,6 +1,6 @@
 pkgname = "chromium"
 # https://chromiumdash.appspot.com/releases?platform=Linux
-pkgver = "123.0.6312.58"
+pkgver = "123.0.6312.105"
 pkgrel = 0
 archs = ["aarch64", "ppc64le", "x86_64"]
 configure_args = [
@@ -136,7 +136,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
 url = "https://www.chromium.org"
 source = f"https://commondatastorage.googleapis.com/chromium-browser-official/chromium-{pkgver}.tar.xz"
-sha256 = "f8dae4a2ff7b00bb44fa136c2101638fea4f232e4819be3f73381ddc0d3bf718"
+sha256 = "0a14fba1fb1a288d99b188160e3138295aa8604bdf492e62a94c0ec35a4e229d"
 debug_level = 0
 tool_flags = {
     "CFLAGS": [
@@ -323,10 +323,10 @@ def do_install(self):
 
     self.install_dir("usr/bin")
     self.install_link(
-        "../lib/chromium/chromium-launcher.sh", "usr/bin/chromium-browser"
+        "usr/bin/chromium-browser", "../lib/chromium/chromium-launcher.sh"
     )
-    self.install_link("../lib/chromium/chromedriver", "usr/bin/chromedriver")
-    self.install_link("chromium-browser", "usr/bin/chromium")
+    self.install_link("usr/bin/chromedriver", "../lib/chromium/chromedriver")
+    self.install_link("usr/bin/chromium", "chromium-browser")
 
     # desktop file, manpage etc
     self.do("./pp-data.sh")

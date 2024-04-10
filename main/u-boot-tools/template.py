@@ -1,5 +1,5 @@
 pkgname = "u-boot-tools"
-pkgver = "2023.10"
+pkgver = "2024.01"
 pkgrel = 0
 build_style = "makefile"
 make_cmd = "gmake"
@@ -32,7 +32,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://www.denx.de/wiki/U-Boot"
 source = f"https://ftp.denx.de/pub/u-boot/u-boot-{pkgver}.tar.bz2"
-sha256 = "e00e6c6f014e046101739d08d06f328811cebcf5ae101348f409cbbd55ce6900"
+sha256 = "b99611f1ed237bf3541bdc8434b68c96a6e05967061f992443cb30aabebef5b3"
 hardening = ["vis", "cfi"]
 # weird test suite
 options = ["!check"]
@@ -66,10 +66,6 @@ def do_configure(self):
     )
 
 
-def post_build(self):
-    self.ln_s("fw_printenv", "tools/env/fw_setenv")
-
-
 def do_install(self):
     for t in [
         "dumpimage",
@@ -86,6 +82,7 @@ def do_install(self):
         "proftool",
         "spl_size_limit",
         "env/fw_printenv",
-        "env/fw_setenv",
     ]:
         self.install_bin(f"tools/{t}")
+    # extras
+    self.install_link("usr/bin/fw_setenv", "fw_printenv")

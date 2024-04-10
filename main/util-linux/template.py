@@ -1,5 +1,5 @@
 pkgname = "util-linux"
-pkgver = "2.39.3"
+pkgver = "2.39.4"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -39,15 +39,16 @@ configure_args = [
     "-Dsysvinit=disabled",
 ]
 hostmakedepends = [
+    "bash",
     "meson",
     "ninja",
     "bison",
     "flex",
     "gettext-devel",
     "pkgconf",
-    "bash-completion",
 ]
 makedepends = [
+    "bash-completion",
     "linux-headers",
     "libcap-ng-devel",
     "linux-pam-devel",
@@ -64,7 +65,7 @@ url = "https://www.kernel.org/pub/linux/utils/util-linux"
 source = (
     f"$(KERNEL_SITE)/utils/{pkgname}/v{pkgver[:-2]}/{pkgname}-{pkgver}.tar.xz"
 )
-sha256 = "7b6605e48d1a49f43cc4b4cfc59f313d0dd5402fa40b96810bd572e167dfed0f"
+sha256 = "6c4f8723dafd41c39d93ecbf16509fc88c33cd5bd3277880ae5a1d97a014fd0e"
 tool_flags = {"CFLAGS": ["-D_DIRENT_HAVE_D_TYPE"]}
 # checkdepends are missing
 options = ["!check"]
@@ -73,6 +74,12 @@ options = ["!check"]
 def post_extract(self):
     self.rm("tests/ts/lsns/ioctl_ns", force=True)
     self.rm("tests/ts/col/multibyte", force=True)
+
+
+def init_configure(self):
+    # https://github.com/pkgconf/pkgconf/issues/205
+    # causes --variable=completionsdir for bash-completion to double-prefix otherwise
+    self.env["PKG_CONFIG_FDO_SYSROOT_RULES"] = "1"
 
 
 def post_install(self):

@@ -1,6 +1,6 @@
 pkgname = "python-execnet"
-pkgver = "2.0.2"
-pkgrel = 1
+pkgver = "2.1.1"
+pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -16,7 +16,7 @@ maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://github.com/pytest-dev/execnet"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "7500bdc398c39558c04e12eb52075af7365a40f90dec08593f182e8ed733f91e"
+sha256 = "ee16254cae42fe128acf8870002d49fe27a289c05b5b3b3c14ca4921ae74587a"
 
 
 def init_build(self):

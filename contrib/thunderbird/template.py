@@ -259,12 +259,12 @@ def do_install(self):
 
     # https://bugzilla.mozilla.org/show_bug.cgi?id=658850
     self.rm(self.destdir / "usr/lib/thunderbird/thunderbird-bin")
-    self.install_link("thunderbird", "usr/lib/thunderbird/thunderbird-bin")
+    self.install_link("usr/lib/thunderbird/thunderbird-bin", "thunderbird")
     # to be provided
     self.rm(self.destdir / "usr/bin/thunderbird")
     # default launcher
     self.install_link(
-        "/usr/lib/thunderbird/thunderbird", "usr/bin/thunderbird-default"
+        "usr/bin/thunderbird-default", "../lib/thunderbird/thunderbird"
     )
     # wayland launcher
     self.install_file(
@@ -273,8 +273,8 @@ def do_install(self):
         mode=0o755,
     )
     self.install_link(
-        "/usr/lib/thunderbird/thunderbird-wayland",
         "usr/bin/thunderbird-wayland",
+        "../lib/thunderbird/thunderbird-wayland",
     )
 
 
@@ -288,19 +288,11 @@ def _wl(self):
     self.pkgdesc = f"{pkgdesc} (prefer Wayland)"
     self.install_if = [f"{pkgname}={pkgver}-r{pkgrel}"]  # prefer
 
-    def inst():
-        self.mkdir(self.destdir / "usr/bin", parents=True)
-        self.ln_s("thunderbird-wayland", self.destdir / "usr/bin/thunderbird")
-
-    return inst
+    return ["@usr/bin/thunderbird=>thunderbird-wayland"]
 
 
 @subpackage("thunderbird-default")
 def _x11(self):
     self.pkgdesc = f"{pkgdesc} (no display server preference)"
 
-    def inst():
-        self.mkdir(self.destdir / "usr/bin", parents=True)
-        self.ln_s("thunderbird-default", self.destdir / "usr/bin/thunderbird")
-
-    return inst
+    return ["@usr/bin/thunderbird=>thunderbird-default"]

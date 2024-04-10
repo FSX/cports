@@ -1,5 +1,5 @@
 pkgname = "wireplumber"
-pkgver = "0.4.17"
+pkgver = "0.5.1"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -8,12 +8,12 @@ configure_args = [
     "-Dintrospection=enabled",
 ]
 hostmakedepends = [
+    "doxygen",
+    "glib-devel",
+    "gobject-introspection",
     "meson",
     "pkgconf",
-    "gobject-introspection",
     "python-lxml",
-    "glib-devel",
-    "doxygen",
 ]
 makedepends = ["pipewire-devel", "glib-devel", "lua5.4-devel"]
 checkdepends = ["pipewire", "dbus"]
@@ -23,7 +23,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://pipewire.pages.freedesktop.org/wireplumber"
 source = f"https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "a12534fd9c1ecf9fbc09f79192d9d57c9ab7bf01da82615ab4103b2f8e2e91a7"
+sha256 = "9b776f5481a52f11b30ed46f8baf743534857b74ca3d3dc09a5b1602d5d5a466"
 
 
 def post_install(self):

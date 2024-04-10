@@ -9,7 +9,8 @@ not work, as we don't supply external gcc-style runtime.
  compiler-rt/CMakeLists.txt              | 98 +++++++++++++++----------
  compiler-rt/lib/builtins/CMakeLists.txt | 47 ++----------
  llvm/runtimes/CMakeLists.txt            | 12 ++-
- 3 files changed, 76 insertions(+), 81 deletions(-)
+ runtimes/CMakeLists.txt                 |  2 +-
+ 4 files changed, 77 insertions(+), 82 deletions(-)
 
 diff --git a/compiler-rt/CMakeLists.txt b/compiler-rt/CMakeLists.txt
 index 5ef720f24..80305e32c 100644
@@ -61,6 +62,28 @@ index 5ef720f24..80305e32c 100644
  if (COMPILER_RT_STANDALONE_BUILD)
    set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
    set(CMAKE_CXX_STANDARD_REQUIRED YES)
+@@ -88,20 +88,7 @@ if (COMPILER_RT_STANDALONE_BUILD)
+     set_target_properties(intrinsics_gen PROPERTIES FOLDER "Compiler-RT Misc")
+   endif()
+ 
+-  find_package(Python3 COMPONENTS Interpreter)
+-  if(NOT Python3_Interpreter_FOUND)
+-    message(WARNING "Python3 not found, using python2 as a fallback")
+-    find_package(Python2 COMPONENTS Interpreter REQUIRED)
+-    if(Python2_VERSION VERSION_LESS 2.7)
+-      message(SEND_ERROR "Python 2.7 or newer is required")
+-    endif()
+-
+-    # Treat python2 as python3
+-    add_executable(Python3::Interpreter IMPORTED)
+-    set_target_properties(Python3::Interpreter PROPERTIES
+-      IMPORTED_LOCATION ${Python2_EXECUTABLE})
+-    set(Python3_EXECUTABLE ${Python2_EXECUTABLE})
+-  endif()
++  set(Python3_EXECUTABLE "/usr/bin/python3")
+ 
+   # Ensure that fat libraries are built correctly on Darwin
+   if(APPLE)
 @@ -145,6 +106,65 @@ if ("${COMPILER_RT_DEFAULT_TARGET_TRIPLE}" MATCHES ".*android.*")
  endif()
  pythonize_bool(ANDROID)
@@ -245,6 +268,19 @@ index 75256c132..ad96d71f3 100644
                                        -DLLVM_INCLUDE_TESTS=${LLVM_INCLUDE_TESTS}
                                        -DLLVM_ENABLE_PROJECTS_USED=${LLVM_ENABLE_PROJECTS_USED}
                                        -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=${LLVM_ENABLE_PER_TARGET_RUNTIME_DIR}
+diff --git a/runtimes/CMakeLists.txt b/runtimes/CMakeLists.txt
+index 5995298..d94db35 100644
+--- a/runtimes/CMakeLists.txt
++++ b/runtimes/CMakeLists.txt
+@@ -155,7 +155,7 @@ set(LLVM_COMPILER_CHECKED ON)
+ include(AddLLVM)
+ include(HandleLLVMOptions)
+ 
+-find_package(Python3 REQUIRED COMPONENTS Interpreter)
++set(Python3_EXECUTABLE "/usr/bin/python3")
+ 
+ # Host triple is used by tests to check if they are running natively.
+ include(GetHostTriple)
 -- 
 2.42.0
 

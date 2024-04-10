@@ -9,6 +9,8 @@ import importlib.util
 import urllib.request as ureq
 import fnmatch
 import time
+import gzip
+import io
 import re
 
 from cbuild.apk import cli as apkcli
@@ -96,14 +98,22 @@ class UpdateCheck:
             return False
 
         req = ureq.Request(
-            u, None, {"User-Agent": "cbuild-update-check/4.20.69"}
+            u,
+            None,
+            {
+                "User-Agent": "cbuild-update-check/4.20.69",
+                "Accept-Encoding": "gzip",
+            },
         )
         try:
             f = ureq.urlopen(req, None, 10)
+            if f.info().get("Content-Encoding") == "gzip":
+                resp = gzip.GzipFile(fileobj=io.BytesIO(f.read())).read()
+            else:
+                resp = f.read()
+            ret = resp.decode("utf-8", "ignore")
         except Exception:
             return None
-
-        ret = f.read().decode("utf-8", "ignore")
 
         self._urlcache[u] = True
 
@@ -447,6 +457,12 @@ def update_check(pkg, verbose=False, error=False):
             uc.vdsuffix = modh.vdsuffix
 
     if uc.ignore is True or pkg.build_style == "meta":
+        return checkvers
+
+    if uc.ignore and type(uc.ignore) is not list:
+        if error:
+            return None
+        print(f"CAUTION: malformed ignore list for {pkg.pkgname}")
         return checkvers
 
     # use hooks if defined
