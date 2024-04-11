@@ -1,5 +1,5 @@
 pkgname = "textadept"
-pkgver = "12.2"
+pkgver = "12.3"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -24,8 +24,8 @@ maintainer = "fsx <frank@61924.nl>"
 license = "MIT"
 url = "https://orbitalquark.github.io/textadept"
 source = [
-    "https://github.com/orbitalquark/textadept/archive/refs/tags/textadept_12.2.tar.gz",
-    "!https://www.scintilla.org/scintilla537.tgz",
+    "https://github.com/orbitalquark/textadept/archive/refs/tags/textadept_12.3.tar.gz",
+    "!https://www.scintilla.org/scintilla541.tgz",
     "!https://www.scintilla.org/lexilla510.tgz",
     "!https://github.com/orbitalquark/scinterm/archive/scinterm_5.0.zip",
     "!https://github.com/orbitalquark/scintillua/archive/48a6fc9511ec67993e43ac7f5a33efc616b7ea32.zip",
@@ -52,8 +52,8 @@ source_paths = [
     "build_dir/_deps/",
 ]
 sha256 = [
-    "1e5b6eca26dbdb06b8aca1c1f743a28674c2205bf8870a1e6f3a2da9f57f4071",
-    "e75120a74e3266eb50b07c91e14503d736a716958361b20751d7de9ee03c1954",
+    "af800b92f4922b454ddca67e5f3c06e18b424b4c593e4d001b9141fe3797f3b4",
+    "752a859b5b5bfbe7dd189ece747b20d8daa2bca73e98bcf8bf1e72f29ce14d5e",
     "6b3595274005498671b854cf57bdeec2254966f371712fcf3a716d97aa7f3fd8",
     "975a9e2cc0ab872a1903f19f997151db4ad8e44b14a0ee5efb5bd926d61d6f6e",
     "a26e00c03680220fa23ed791e5bb7d8a79c7e35062e54ff5d16d14cc90558bf6",
@@ -72,7 +72,7 @@ def post_prepare(self):
     self.mkdir("build_dir")
     self.mkdir("build_dir/_deps")
     deps_dir = "build_dir/_deps/"
-    self.cp(self.sources_path / "scintilla537.tgz", deps_dir)
+    self.cp(self.sources_path / "scintilla541.tgz", deps_dir)
     self.cp(self.sources_path / "lexilla510.tgz", deps_dir)
     self.cp(self.sources_path / "scinterm_5.0.zip", deps_dir)
     self.cp(self.sources_path / "48a6fc9511ec67993e43ac7f5a33efc616b7ea32.zip", deps_dir)
