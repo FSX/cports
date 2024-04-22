@@ -1,6 +1,6 @@
 pkgname = "python-sphinx"
-pkgver = "7.0.1"
-pkgrel = 1
+pkgver = "7.3.7"
+pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
     "python-setuptools",
@@ -30,12 +30,12 @@ depends = [
 pkgdesc = "Python documentation generator"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
-url = "http://sphinx-doc.org"
-source = f"$(PYPI_SITE)/S/Sphinx/Sphinx-{pkgver}.tar.gz"
-sha256 = "61e025f788c5977d9412587e733733a289e2b9fdc2fef8868ddfbfc4ccfe881d"
+url = "https://www.sphinx-doc.org/en/master"
+source = f"$(PYPI_SITE)/s/sphinx/sphinx-{pkgver}.tar.gz"
+sha256 = "a4a7db75ed37531c05002d56ed6948d4c42f473a36f46e1382b0bd76ca9627bc"
 # dependency of pytest, missing other checkdepends
 options = ["!check"]
 
 
 def post_install(self):
-    self.install_license("LICENSE")
+    self.install_license("LICENSE.rst")

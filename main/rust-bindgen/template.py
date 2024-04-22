@@ -1,6 +1,6 @@
 pkgname = "rust-bindgen"
 pkgver = "0.69.4"
-pkgrel = 0
+pkgrel = 1
 build_style = "cargo"
 make_build_args = ["--bins"]
 make_install_args = ["--bins"]
@@ -19,5 +19,5 @@ options = ["!check"]
 
 
 def do_install(self):
-    self.cargo.install(wrksrc="bindgen-cli")
+    self.install_bin(f"./target/{self.profile().triplet}/release/bindgen")
     self.install_license("LICENSE")

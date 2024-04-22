@@ -1,5 +1,5 @@
 pkgname = "fuzzel"
-pkgver = "1.9.2"
+pkgver = "1.10.2"
 pkgrel = 0
 build_style = "meson"
 hostmakedepends = [
@@ -22,7 +22,7 @@ maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://codeberg.org/dnkl/fuzzel"
 source = f"{url}/archive/{pkgver}.tar.gz"
-sha256 = "fb68a09a6f6f3dde8266177b1bef6f5c91b3bf60e9925eea7887ad2fa81d2183"
+sha256 = "5362175f301af3f27c23138ac339294ce33dff61720ffc7eb13e78ec56f60a8b"
 hardening = ["vis", "cfi"]
 # no tests
 options = ["!check"]

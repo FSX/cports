@@ -1,6 +1,6 @@
 pkgname = "llvm"
-pkgver = "17.0.6"
-pkgrel = 4
+pkgver = "18.1.4"
+pkgrel = 0
 build_style = "cmake"
 configure_args = [
     "-DCMAKE_BUILD_TYPE=Release",
@@ -15,7 +15,7 @@ configure_args = [
     "-DLIBCXX_USE_COMPILER_RT=YES",
     "-DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=NO",
     "-DLIBCXX_HAS_MUSL_LIBC=YES",
-    "-DLIBCXX_HARDENING_MODE=hardened",
+    "-DLIBCXX_HARDENING_MODE=fast",
     "-DLIBCXXABI_USE_LLVM_UNWINDER=YES",
     "-DLIBCXXABI_ENABLE_STATIC_UNWINDER=NO",
     "-DLIBCXXABI_USE_COMPILER_RT=YES",
@@ -49,7 +49,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Apache-2.0"
 url = "https://llvm.org"
 source = f"https://github.com/llvm/llvm-project/releases/download/llvmorg-{pkgver}/llvm-project-{pkgver}.src.tar.xz"
-sha256 = "58a8818c60e6627064f312dbf46c02d9949956558340938b71cf731ad8bc0813"
+sha256 = "2c01b2fbb06819a12a92056a7fd4edcdc385837942b5e5260b9c2c0baff5116b"
 # reduce size of debug symbols
 debug_level = 1
 # lto does not kick in until stage 2
@@ -96,8 +96,6 @@ if self.stage > 0:
             hostmakedepends += ["llvm-bootstrap"]
             # set all the stuff that matters
             configure_args += [
-                "-DCMAKE_C_COMPILER=/usr/lib/llvm-bootstrap/bin/clang",
-                "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-bootstrap/bin/clang++",
                 "-DCMAKE_AR=/usr/lib/llvm-bootstrap/bin/llvm-ar",
                 "-DCMAKE_NM=/usr/lib/llvm-bootstrap/bin/llvm-nm",
                 "-DCMAKE_RANLIB=/usr/lib/llvm-bootstrap/bin/llvm-ranlib",
@@ -159,6 +157,11 @@ def init_configure(self):
         self.configure_args += ["-DLLVM_ENABLE_LTO=Thin"]
 
     if not self.profile().cross:
+        if self.stage >= 2:
+            self.configure_args += [
+                f"-DCMAKE_C_COMPILER={self.chroot_cwd / 'boot-clang'}",
+                f"-DCMAKE_CXX_COMPILER={self.chroot_cwd / 'boot-clang++'}",
+            ]
         return
 
     # grab these from the host
@@ -181,6 +184,19 @@ def do_configure(self):
     # when bootstrapping, this will check the actual profile
     with self.profile(self.profile().arch) as pf:
         trip = pf.triplet
+
+    for f in ["clang", "clang++"]:
+        outp = self.cwd / f"boot-{f}"
+        if not self.use_ccache:
+            outp.symlink_to(f"/usr/lib/llvm-bootstrap/bin/{f}")
+            continue
+        with open(outp, "w") as outf:
+            outf.write(
+                f"""#!/bin/sh
+exec /usr/bin/ccache /usr/lib/llvm-bootstrap/bin/{f} "$@"
+"""
+            )
+        outp.chmod(0o755)
 
     cmake.configure(
         self,
@@ -568,7 +584,7 @@ def _libcxxabi_static(self):
 def _libllvm(self):
     self.pkgdesc = f"{pkgdesc} (runtime library)"
 
-    return [f"usr/lib/libLLVM-{_llvmgen}*.so"]
+    return ["usr/lib/libLLVM.so.*", f"usr/lib/libLLVM-{_llvmgen}*.so"]
 
 
 @subpackage("lld")

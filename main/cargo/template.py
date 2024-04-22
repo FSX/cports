@@ -1,7 +1,10 @@
 pkgname = "cargo"
-pkgver = "1.76.0"
-_cargover = f"0.{int(pkgver[2:4]) + 1}.{pkgver[5:]}"
-pkgrel = 0
+pkgver = "1.77.1"
+# _cargover = f"0.{int(pkgver[2:4]) + 1}.{pkgver[5:]}"
+# FIXME: newer version segfaults on ppc64le when building self, when
+# building mozjs115, and possibly others (seems to be random)
+_cargover = "0.77.0"
+pkgrel = 1
 build_style = "cargo"
 # PKG_CONFIG being in environment mysteriously brings target sysroot
 # into linker sequence for build script, breaking build entirely

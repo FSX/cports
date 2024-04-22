@@ -1,5 +1,5 @@
 pkgname = "linux-stable-zfs-bin"
-_kernver = "6.8.4"
+_kernver = "6.8.6"
 _zfsver = "2.2.3"
 pkgver = f"{_zfsver}.{_kernver}"
 pkgrel = 0
@@ -12,10 +12,6 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "CDDL-1.0"
 url = "https://openzfs.github.io/openzfs-docs"
 options = ["!cross"]
-
-
-if self.profile().arch == "riscv64":
-    broken = "https://github.com/openzfs/zfs/issues/14974"
 
 
 def init_configure(self):

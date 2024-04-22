@@ -1,108 +1,93 @@
-commit ba74013697bdea98edee275bd5cf2b937be771d6
+commit f797d02b1348532d157896a12eed824f7b668a0e
 Author: q66 <q66@chimera-linux.org>
-Date:   Wed Dec 20 20:04:45 2023 +0100
+Date:   Tue Apr 16 19:53:10 2024 +0200
 
-    remove strncpy/stpncpy overlap checks for the time being
+    drop overlap checks again
     
-    The logic here is fundamentally wrong as strncpy may not copy
-    full given n characters, but only at most that (if the source
-    string is shorter, it will only copy the source string). This
-    results in false positive checks if the given source is short
-    and the buffers happen to overlap by some of the given chars.
+    The overlap checks are just entirely broken. For example,
+    the following:
+    
+    char buf[32];
+    memcpy(buf, buf + 16, 16);
+    
+    will fail the check.
 
 diff --git a/include/string.h b/include/string.h
-index 2f2d185..2ede429 100644
+index 6d3e00a..6208b4d 100644
 --- a/include/string.h
 +++ b/include/string.h
-@@ -189,9 +189,6 @@ _FORTIFY_FN(stpncpy) char *stpncpy(char * _FORTIFY_POS0 __d, const char *__s,
- #if __has_builtin(__builtin___stpncpy_chk) && USE_NATIVE_CHK
- 	return __builtin___stpncpy_chk(__d, __s, __n, __fh_bos(__d, 0));
- #else
--	if (__fh_overlap(__d, __s, __n))
+@@ -55,8 +55,6 @@ __error_if((__fh_bos(__od, 0) < __n), "'memcpy' called with `n` bigger than the
+ 	char *__d = (char *)__od;
+ 	const char *__s = (const char *)__os;
+ 
+-	if __fh_overlap(__d, __bd, __s, __n)
 -		__builtin_trap();
--
- 	__fh_size_t __b = __fh_bos(__d, 0);
- 	if (__n > __b && strlen(__s) + 1 > __b)
+ 	if (__n > __bd || __n > __bs)
  		__builtin_trap();
-@@ -290,9 +287,6 @@ _FORTIFY_FN(strncpy) char *strncpy(char * _FORTIFY_POS0 __d,
- #if __has_builtin(__builtin___strncpy_chk) && USE_NATIVE_CHK
- 	return __builtin___strncpy_chk(__d, __s, __n, __fh_bos(__d, 0));
- #else
--	if (__fh_overlap(__d, __s, __n))
+ 	return __builtin_memcpy(__od, __os, __n);
+@@ -171,9 +169,6 @@ _FORTIFY_FN(stpcpy) char *stpcpy(char * _FORTIFY_POS0 __d, const char *__s)
+ 	__fh_size_t __n = strlen(__s) + 1;
+ 	__fh_size_t __b = __fh_bos(__d, 0);
+ 
+-	if (__fh_overlap(__d, __b, __s, __n))
 -		__builtin_trap();
 -
- 	__fh_size_t __b = __fh_bos(__d, 0);
  	if (__n > __b)
  		__builtin_trap();
-diff --git a/tests/test_stpncpy_overwrite_over.c b/tests/test_stpncpy_overwrite_over.c
-index e66d8d3..e323260 100644
---- a/tests/test_stpncpy_overwrite_over.c
-+++ b/tests/test_stpncpy_overwrite_over.c
-@@ -3,6 +3,7 @@
- #include <string.h>
+ 	return __orig_stpcpy(__d, __s);
+@@ -193,8 +188,6 @@ _FORTIFY_FN(stpncpy) char *stpncpy(char * _FORTIFY_POS0 __d, const char *__s,
+ 	return __builtin___stpncpy_chk(__d, __s, __n, __fh_bos(__d, 0));
+ #else
+ 	__fh_size_t max_len_s = strnlen(__s, __n);
+-	if (__fh_overlap(__d, max_len_s, __s, max_len_s))
+-		__builtin_trap();
  
- int main(int argc, char** argv) {
-+#if 0
-   char buffer[9] = {'A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', '\0'};
-   puts(buffer);
+ 	// If the length strlen(src) is smaller than n, the remaining
+ 	// characters in the array pointed to by dest are filled with null
+@@ -239,9 +232,6 @@ _FORTIFY_FN(strcpy) char *strcpy(char * _FORTIFY_POS0 __d, const char *__s)
+ 	__fh_size_t __n = strlen(__s) + 1;
+ 	__fh_size_t __b = __fh_bos(__d, 0);
  
-@@ -12,4 +13,5 @@ int main(int argc, char** argv) {
+-	if (__fh_overlap(__d, __b, __s, __n))
+-		__builtin_trap();
+-
+ 	if (__n > __b)
+ 		__builtin_trap();
+ 	return __orig_strcpy(__d, __s);
+@@ -299,8 +289,6 @@ _FORTIFY_FN(strncpy) char *strncpy(char * _FORTIFY_POS0 __d,
+ 	return __builtin___strncpy_chk(__d, __s, __n, __fh_bos(__d, 0));
+ #else
+ 	__fh_size_t max_len_s = strnlen(__s, __n);
+-	if (__fh_overlap(__d, max_len_s, __s, max_len_s))
+-		__builtin_trap();
  
-   puts(buffer);
-   return ret;
-+#endif
- }
-diff --git a/tests/test_stpncpy_overwrite_under.c b/tests/test_stpncpy_overwrite_under.c
-index 5625ff8..efc79ec 100644
---- a/tests/test_stpncpy_overwrite_under.c
-+++ b/tests/test_stpncpy_overwrite_under.c
-@@ -3,6 +3,7 @@
- #include <string.h>
- 
- int main(int argc, char** argv) {
-+#if 0
-   char buffer[9] = {'A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', '\0'};
-   puts(buffer);
- 
-@@ -12,4 +13,5 @@ int main(int argc, char** argv) {
- 
-   puts(buffer);
-   return ret;
-+#endif
- }
-diff --git a/tests/test_strncpy_overwrite_over.c b/tests/test_strncpy_overwrite_over.c
-index d584bcc..29abed8 100644
---- a/tests/test_strncpy_overwrite_over.c
-+++ b/tests/test_strncpy_overwrite_over.c
-@@ -3,6 +3,7 @@
- #include <string.h>
- 
- int main(int argc, char** argv) {
-+#if 0
-   char buffer[9] = {'A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', '\0'};
-   puts(buffer);
- 
-@@ -12,4 +13,5 @@ int main(int argc, char** argv) {
- 
-   puts(buffer);
-   return ret;
-+#endif
- }
-diff --git a/tests/test_strncpy_overwrite_under.c b/tests/test_strncpy_overwrite_under.c
-index f554b28..fdf01e3 100644
---- a/tests/test_strncpy_overwrite_under.c
-+++ b/tests/test_strncpy_overwrite_under.c
-@@ -3,6 +3,7 @@
- #include <string.h>
- 
- int main(int argc, char** argv) {
-+#if 0
-   char buffer[9] = {'A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', '\0'};
-   puts(buffer);
- 
-@@ -12,4 +13,5 @@ int main(int argc, char** argv) {
- 
-   puts(buffer);
-   return ret;
-+#endif
- }
+ 	// If the length of src is less than n, strncpy() writes additional
+ 	// null bytes to dest to ensure that a total of n bytes are written.
+diff --git a/tests/Makefile b/tests/Makefile
+index 5e0abbd..3c15412 100644
+--- a/tests/Makefile
++++ b/tests/Makefile
+@@ -48,7 +48,6 @@ RUNTIME_TARGETS= \
+ 	test_mbstowcs_static         \
+ 	test_memcpy_dynamic_read     \
+ 	test_memcpy_dynamic_write    \
+-	test_memcpy_overwrite_over   \
+ 	test_memcpy_static_read      \
+ 	test_memmove_dynamic_read    \
+ 	test_memmove_dynamic_write   \
+@@ -90,7 +89,6 @@ RUNTIME_TARGETS= \
+ 	test_stpcpy_overwrite_under  \
+ 	test_stpcpy_static_write     \
+ 	test_stpncpy_dynamic_write   \
+-	test_stpncpy_overwrite_over  \
+ 	test_stpncpy_overwrite_under \
+ 	test_stpncpy_static_write    \
+ 	test_strlen_static_read      \
+@@ -108,7 +106,6 @@ RUNTIME_TARGETS= \
+ 	test_strncat_dynamic_write   \
+ 	test_strncat_static_write    \
+ 	test_strncpy_dynamic_write   \
+-	test_strncpy_overwrite_over  \
+ 	test_strncpy_overwrite_under \
+ 	test_strncpy_static_write    \
+ 	test_strrchr_dynamic_read    \

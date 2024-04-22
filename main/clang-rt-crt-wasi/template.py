@@ -1,6 +1,6 @@
 pkgname = "clang-rt-crt-wasi"
-pkgver = "17.0.6"
-pkgrel = 1
+pkgver = "18.1.4"
+pkgrel = 0
 build_style = "cmake"
 configure_args = [
     "-DCMAKE_BUILD_TYPE=Release",
@@ -44,7 +44,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Apache-2.0"
 url = "https://llvm.org"
 source = f"https://github.com/llvm/llvm-project/releases/download/llvmorg-{pkgver}/llvm-project-{pkgver}.src.tar.xz"
-sha256 = "58a8818c60e6627064f312dbf46c02d9949956558340938b71cf731ad8bc0813"
+sha256 = "2c01b2fbb06819a12a92056a7fd4edcdc385837942b5e5260b9c2c0baff5116b"
 debug_level = 0
 hardening = ["!int", "!scp", "!var-init"]
 # crosstoolchain
