@@ -1,8 +1,8 @@
 pkgname = "musl-cross"
-pkgver = "1.2.5"
-pkgrel = 1
-_commit = "v1.2.5"
-_scudo_ver = "18.1.4"
+pkgver = "1.2.5_git20240512"
+pkgrel = 2
+_commit = "007997299248b8682dcbb73595c53dfe86071c83"
+_scudo_ver = "18.1.5"
 build_style = "gnu_configure"
 configure_args = ["--prefix=/usr", "--disable-gcc-wrapper"]
 configure_gen = []
@@ -19,8 +19,8 @@ source = [
     f"https://github.com/llvm/llvm-project/releases/download/llvmorg-{_scudo_ver}/compiler-rt-{_scudo_ver}.src.tar.xz",
 ]
 sha256 = [
-    "5829457efb2247c1e39920b14721b75e9c488a06149736c8317536ec4aa3764b",
-    "f178ce9bf17f46dc5786e59346c8b4dd43f4d566cf75c87380e103802a2e6eb3",
+    "d93dbd9f944d3fadd4048a2c44304e02cf95812718f290d3db0528e2f8045d21",
+    "a58fa6ce9b2d1653eaad384be4972cfdfde6dac11d2f7764f17eed801fe8c289",
 ]
 # mirrors musl
 hardening = ["!scp"]

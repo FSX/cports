@@ -1,8 +1,8 @@
 pkgname = "musl"
-pkgver = "1.2.5"
-pkgrel = 1
-_scudo_ver = "18.1.4"
-_commit = "v1.2.5"
+pkgver = "1.2.5_git20240512"
+pkgrel = 2
+_commit = "007997299248b8682dcbb73595c53dfe86071c83"
+_scudo_ver = "18.1.5"
 build_style = "gnu_configure"
 configure_args = ["--prefix=/usr", "--disable-gcc-wrapper"]
 configure_gen = []
@@ -22,9 +22,10 @@ source = [
 ]
 source_paths = [".", "compiler-rt"]
 sha256 = [
-    "5829457efb2247c1e39920b14721b75e9c488a06149736c8317536ec4aa3764b",
-    "f178ce9bf17f46dc5786e59346c8b4dd43f4d566cf75c87380e103802a2e6eb3",
+    "d93dbd9f944d3fadd4048a2c44304e02cf95812718f290d3db0528e2f8045d21",
+    "a58fa6ce9b2d1653eaad384be4972cfdfde6dac11d2f7764f17eed801fe8c289",
 ]
+compression = "deflate"
 # scp makes it segfault
 hardening = ["!scp"]
 # does not ship tests
@@ -55,6 +56,9 @@ if self.stage > 0:
 
 
 def post_extract(self):
+    # reported in libc.so --version
+    with open(self.cwd / "VERSION", "w") as f:
+        f.write(pkgver)
     # prepare scudo subdir
     self.mkdir("src/malloc/scudo/scudo", parents=True)
     # move compiler-rt stuff in there

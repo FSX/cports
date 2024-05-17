@@ -1,5 +1,5 @@
 pkgname = "conmon"
-pkgver = "2.1.10"
+pkgver = "2.1.12"
 pkgrel = 0
 build_style = "meson"
 hostmakedepends = [
@@ -17,7 +17,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Apache-2.0"
 url = "https://github.com/containers/conmon"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "455fabcbd4a5a5dc5e05374a71b62dc0b08ee865c2ba398e9dc9acac1ea1836a"
+sha256 = "842f0b5614281f7e35eec2a4e35f9f7b9834819aa58ecdad8d0ff6a84f6796a6"
 
 
 def post_build(self):

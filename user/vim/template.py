@@ -1,5 +1,5 @@
 pkgname = "vim"
-pkgver = "9.1.0296"
+pkgver = "9.1.0404"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -31,9 +31,9 @@ depends = [f"xxd={pkgver}-r{pkgrel}"]
 pkgdesc = "Vi-style text editor"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "Vim"
-url = "https://vim.org"
+url = "https://www.vim.org"
 source = f"https://github.com/vim/vim/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "8c943d15107be8cb247186b0eb69ec924a5959d5ecb49214b4d90e13c2a9574f"
+sha256 = "1aaff97f49f44334c6da1be426d4036b328956116560d8617f025bab12ca0727"
 # FIXME cfi int
 hardening = ["vis", "!cfi", "!int"]
 # TODO

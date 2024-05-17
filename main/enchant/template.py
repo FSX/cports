@@ -1,9 +1,16 @@
 pkgname = "enchant"
-pkgver = "2.6.9"
+pkgver = "2.7.3"
 pkgrel = 1
 build_style = "gnu_configure"
 configure_args = ["--enable-relocatable", "--disable-static"]
-hostmakedepends = ["pkgconf", "automake", "libtool"]
+make_cmd = "gmake"
+hostmakedepends = [
+    "automake",
+    "libtool",
+    "gmake",
+    "pkgconf",
+    "vala",
+]
 makedepends = [
     "aspell-devel",
     "glib-devel",
@@ -18,7 +25,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-or-later"
 url = "https://abiword.github.io/enchant"
 source = f"https://github.com/AbiWord/enchant/releases/download/v{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "d9a5a10dc9b38a43b3a0fa22c76ed6ebb7e09eb535aff62954afcdbd40efff6b"
+sha256 = "fe6ad4cbe8c71b9384ffdef962be52d4d2bd5ebfb6351435bb390543d4f78b1e"
 # missing checkdepends
 options = ["!check"]
 

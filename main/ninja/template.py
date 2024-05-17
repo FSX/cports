@@ -1,5 +1,5 @@
 pkgname = "ninja"
-pkgver = "1.11.1"
+pkgver = "1.12.1"
 pkgrel = 0
 hostmakedepends = ["python"]
 pkgdesc = "Small build system with a focus on speed"
@@ -7,9 +7,9 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Apache-2.0"
 url = "https://ninja-build.org"
 source = f"https://github.com/ninja-build/ninja/archive/v{pkgver}.tar.gz"
-sha256 = "31747ae633213f1eda3842686f83c2aa1412e0f5691d1c14dbbcc67fe7400cea"
-# FIXME cfi
-hardening = ["vis", "!cfi"]
+sha256 = "821bdff48a3f683bc4bb3b6f0b5fe7b2d647cf65d52aeb63328c91a6c6df285a"
+# Cycle: ninja -> gtest -> ninja
+options = ["!check"]
 
 
 def do_configure(self):
@@ -18,14 +18,6 @@ def do_configure(self):
 
 def do_build(self):
     self.do("python", "configure.py")
-
-
-def do_check(self):
-    self.do(self.chroot_cwd / "ninja", "ninja_test")
-    self.do(
-        self.chroot_cwd / "ninja_test",
-        "--gtest_filter=-SubprocessTest.SetWithLots",
-    )
 
 
 def do_install(self):

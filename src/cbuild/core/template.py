@@ -588,6 +588,7 @@ sites = {
     "pypi": "https://files.pythonhosted.org/packages/source",
     "gnu": "https://ftp.gnu.org/gnu",
     "kde": "https://download.kde.org/stable",
+    "xfce": "https://archive.xfce.org/src",
 }
 
 
@@ -1832,6 +1833,8 @@ class Subpackage(Package):
         self.take("usr/bin/*")
         self.take("usr/share/bash-completion", missing_ok=True)
         self.take("usr/share/zsh", missing_ok=True)
+        self.take("usr/share/fish/completions", missing_ok=True)
+        self.take("usr/share/fish/vendor_completions.d", missing_ok=True)
         if man:
             self.take(f"usr/share/man/man[{man}]", missing_ok=True)
 

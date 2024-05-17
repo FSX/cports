@@ -1,8 +1,8 @@
 pkgname = "eza"
-pkgver = "0.18.11"
+pkgver = "0.18.16"
 pkgrel = 0
 build_style = "cargo"
-hostmakedepends = ["cargo", "pkgconf"]
+hostmakedepends = ["cargo-auditable", "pkgconf"]
 makedepends = [
     "libgit2-devel",
     "rust-std",
@@ -15,7 +15,7 @@ url = "https://eza.rocks"
 source = (
     f"https://github.com/eza-community/eza/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "92d810c36ac67038e2ed3c421087de8793eb0b9de332c9239096df9d52eb30e3"
+sha256 = "dd713474b902568cb2c7c8ea7db8e08db5818617e34908ae7142e9da9cefd17b"
 
 
 def post_install(self):

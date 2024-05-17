@@ -1,6 +1,6 @@
 pkgname = "slirp4netns"
-pkgver = "1.2.3"
-pkgrel = 1
+pkgver = "1.3.1"
+pkgrel = 0
 build_style = "gnu_configure"
 hostmakedepends = [
     "automake",
@@ -16,8 +16,8 @@ pkgdesc = "User-mode networking for unprivileged network namespaces"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "GPL-2.0-or-later"
 url = "https://github.com/rootless-containers/slirp4netns"
-source = f"https://github.com/rootless-containers/slirp4netns/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "acce648fab8fe5f113c41a8fd6d20177708519b4ddaa60f845e1998a17b22ca5"
+source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
+sha256 = "a3b7c7b593b279c46d25a48b583371ab762968e98b6a46457d8d52a755852eb9"
 # cfi failure likely due to libslirp non-cfi timer shenanigans
 hardening = ["vis", "!cfi"]
 # needs ncat from nmap

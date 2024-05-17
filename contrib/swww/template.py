@@ -1,15 +1,15 @@
 pkgname = "swww"
-pkgver = "0.9.4"
+pkgver = "0.9.5"
 pkgrel = 0
 build_style = "cargo"
-hostmakedepends = ["cargo", "pkgconf", "scdoc"]
+hostmakedepends = ["cargo-auditable", "pkgconf", "scdoc"]
 makedepends = ["lz4-devel", "rust-std"]
 pkgdesc = "Solution to your Wayland Wallpaper Woes"
 maintainer = "Nova <froggo8311@proton.me>"
 license = "GPL-3.0-only"
 url = "https://github.com/LGFae/swww"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "87359135c6930776b6266fe611a97001fca5909bfb999aed0f9036f07533adf7"
+sha256 = "567e2ac76203ad47df5aaafab7d9d0e4e283a74e34690930a4730ecf0a667428"
 
 
 def post_build(self):

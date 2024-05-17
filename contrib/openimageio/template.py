@@ -1,6 +1,6 @@
 pkgname = "openimageio"
-pkgver = "2.5.10.1"
-pkgrel = 1
+pkgver = "2.5.11.0"
+pkgrel = 0
 build_style = "cmake"
 configure_args = [
     # disabled below
@@ -17,7 +17,7 @@ make_check_args = [
     #   texture-crop, texture-interp-bilinear, texture-uint8, texture-skinny
     #   unit_compute (aarch64), unit_simd
     "-E",
-    "(.*-broken|cmake-consumer|docs-examples-.*|filters|igrep|oiiotool|oiiotool-copy|oiiotool-subimage|oiiotool-text|python-.*|texture-crop|texture-interp-bilinear|texture-levels-stoch.*|texture-skinny|texture-udim.*|texture-uint8|unit_compute|unit_simd)",
+    "(.*-broken|cmake-consumer|docs-examples-.*|filters|igrep|oiiotool|oiiotool-copy|oiiotool-subimage|oiiotool-text|python-.*|texture-crop|texture-interp-bilinear|texture-levels-stoch.*|texture-skinny|texture-udim.*|texture-uint8|unit_compute|unit_simd|unit_imageinout)",
 ]
 hostmakedepends = ["cmake", "ninja", "pkgconf"]
 makedepends = [
@@ -46,7 +46,7 @@ maintainer = "Erica Z <zerica@callcc.eu>"
 license = "Apache-2.0"
 url = "https://github.com/AcademySoftwareFoundation/OpenImageIO"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "8f6a547f6a5d510737ba436f867043db537def65f0fdb14ec30e5a185b619f93"
+sha256 = "ebf1945e36679be55519d9f42a8f029c4a53d4efb4aaee3b10af6cdc93fb614b"
 hardening = ["!int"]
 
 

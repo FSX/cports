@@ -1,6 +1,6 @@
 pkgname = "chromium"
 # https://chromiumdash.appspot.com/releases?platform=Linux
-pkgver = "123.0.6312.105"
+pkgver = "125.0.6422.60"
 pkgrel = 0
 archs = ["aarch64", "ppc64le", "x86_64"]
 configure_args = [
@@ -26,6 +26,7 @@ configure_args = [
     "is_debug=false",
     "is_official_build=true",
     "link_pulseaudio=true",
+    'moc_qt6_path="/usr/lib/qt6"',
     "proprietary_codecs=true",
     "regenerate_x11_protos=true",
     "rtc_link_pipewire=true",
@@ -40,6 +41,7 @@ configure_args = [
     "use_lld=true",
     "use_pulseaudio=true",
     "use_qt=false",
+    "use_qt6=true",
     "use_sysroot=false",
     "use_system_freetype=true",
     "use_system_harfbuzz=true",
@@ -119,6 +121,7 @@ makedepends = [
     "opus-devel",
     "pciutils-devel",
     "pipewire-devel",
+    "qt6-qtbase-devel",
     "rust-std",
     "snappy-devel",
     "speex-devel",
@@ -136,7 +139,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-3-Clause"
 url = "https://www.chromium.org"
 source = f"https://commondatastorage.googleapis.com/chromium-browser-official/chromium-{pkgver}.tar.xz"
-sha256 = "0a14fba1fb1a288d99b188160e3138295aa8604bdf492e62a94c0ec35a4e229d"
+sha256 = "93f5850101225945d7ec80959b38460e6a63777055bf2d9e893860c33cb60080"
 debug_level = 0
 tool_flags = {
     "CFLAGS": [
@@ -173,12 +176,15 @@ def post_patch(self):
 
 
 def do_configure(self):
-    # compile gn early so it can be used to generate gni stuff
-    self.do(
-        "./tools/gn/bootstrap/bootstrap.py",
-        f"-j{self.make_jobs}",
-        "--skip-generate-buildfiles",
-    )
+    # gn rebootstrap will fail after unbundle step below
+    with self.stamp("bootstrap_gn") as s:
+        s.check()
+        # compile gn early so it can be used to generate gni stuff
+        self.do(
+            "./tools/gn/bootstrap/bootstrap.py",
+            f"-j{self.make_jobs}",
+            "--skip-generate-buildfiles",
+        )
 
     # where we mess with libvpx configuration, regen the files
     if self.profile().arch == "ppc64le":
@@ -292,6 +298,7 @@ def do_install(self):
     )
     self.install_file(f"{srcp}/libEGL.so", dstp, mode=0o755)
     self.install_file(f"{srcp}/libGLESv2.so", dstp, mode=0o755)
+    # self.install_file(f"{srcp}/libqt6_shim.so", dstp, mode=0o755)
     self.install_file(f"{srcp}/libvulkan.so.1", dstp, mode=0o755)
     self.install_file(f"{srcp}/libvk_swiftshader.so", dstp, mode=0o755)
     self.install_file(f"{srcp}/vk_swiftshader_icd.json", dstp, mode=0o755)

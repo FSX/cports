@@ -75,7 +75,6 @@ def genpkg(pkg, repo, arch, binpkg):
 
     # shlib requires
     if hasattr(pkg, "so_requires"):
-        pkg.so_requires.sort()
         deps += map(lambda v: f"so:{v}", sorted(pkg.so_requires))
 
     # .pc file requires
@@ -230,7 +229,29 @@ set -e
 
     # for stage 1, we have stage0 apk built without zstd
     if (pkg.stage > 1 and pkg.compression) or pkg.compression == "none":
-        pargs += ["--compression", pkg.compression]
+        comp = pkg.compression
+        dcomp = autil.get_compression()
+        # some generic presets that respect user-set global config
+        match comp:
+            case "fast":
+                if dcomp.startswith("zstd"):
+                    comp = "zstd:3"
+                elif dcomp.startswith("deflate"):
+                    comp = "deflate:3"
+            case "slow":
+                if dcomp.startswith("zstd"):
+                    comp = "zstd:19"
+                elif dcomp.startswith("deflate"):
+                    comp = "deflate:9"
+            case "zstd:fast":
+                comp = "zstd:3"
+            case "zstd:slow":
+                comp = "zstd:19"
+            case "deflate:fast":
+                comp = "deflate:3"
+            case "deflate:slow":
+                comp = "deflate:9"
+        pargs += ["--compression", comp]
     else:
         pargs += ["--compression", autil.get_compression()]
 

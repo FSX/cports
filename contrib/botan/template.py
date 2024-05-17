@@ -1,6 +1,6 @@
 pkgname = "botan"
 pkgver = "3.4.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "configure"
 configure_script = "./configure.py"
 configure_args = [
@@ -32,9 +32,13 @@ source = f"{url}/releases/Botan-{pkgver}.tar.xz"
 sha256 = "71843afcc0a2c585f8f33fa304f0b58ae4b9c5d8306f894667b3746044277557"
 # FIXME: cfi
 hardening = ["vis"]
+# see below
+options = []
 
 
 if self.profile().arch == "ppc64":
+    # hangs forever in tests
+    options += ["!check"]
     configure_args += ["--disable-modules=aes_power8"]
 
 

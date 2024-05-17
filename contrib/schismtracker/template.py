@@ -1,5 +1,5 @@
 pkgname = "schismtracker"
-pkgver = "20240409"
+pkgver = "20240515"
 pkgrel = 0
 build_style = "gnu_configure"
 hostmakedepends = ["automake", "pkgconf"]
@@ -9,5 +9,5 @@ maintainer = "Erica Z <zerica@callcc.eu>"
 license = "GPL-2.0-or-later"
 url = "https://schismtracker.org"
 source = f"https://github.com/schismtracker/schismtracker/releases/download/{pkgver}/schismtracker-{pkgver}.source.tar.gz"
-sha256 = "51735768e3b7633678dac6162c5ff94216e2542bae709688f0102af0e97f29eb"
+sha256 = "ac4a320b8cf4cb5ec44b8f384df2276d053791fb5161b974008c6867c84da3f9"
 tool_flags = {"CFLAGS": [f'-DVERSION2="{pkgver}"']}

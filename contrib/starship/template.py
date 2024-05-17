@@ -1,5 +1,5 @@
 pkgname = "starship"
-pkgver = "1.18.2"
+pkgver = "1.19.0"
 pkgrel = 0
 build_style = "cargo"
 make_build_args = [
@@ -15,7 +15,7 @@ make_check_args = make_build_args + [
     "--skip=modules::directory::tests::highlight_git_root_dir_zero_truncation_length",
     "--skip=modules::directory::tests::truncated_directory_config_large",
 ]
-hostmakedepends = ["cargo", "pkgconf"]
+hostmakedepends = ["cargo-auditable", "pkgconf"]
 makedepends = ["rust-std", "zlib-devel"]
 checkdepends = ["git"]
 pkgdesc = "Cross-shell prompt"
@@ -25,7 +25,7 @@ url = "https://starship.rs"
 source = (
     f"https://github.com/starship/starship/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "505100002efe93dbff702edd82f814cadc340335487993e76dd6777dba461a7a"
+sha256 = "cf789791b5c11d6d7a00628590696627bb8f980e3d7c7a0200026787b08aba37"
 # generates completions with host binary
 options = ["!cross"]
 

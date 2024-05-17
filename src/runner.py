@@ -18,7 +18,7 @@ opt_harch = None
 opt_gen_dbg = True
 opt_check = True
 opt_ccache = False
-opt_comp = "deflate"
+opt_comp = "zstd"
 opt_makejobs = 0
 opt_lthreads = 0
 opt_nocolor = False
@@ -481,6 +481,59 @@ def init_late():
 #
 # ACTIONS
 #
+
+
+def short_traceback(e, log):
+    import traceback
+    import subprocess
+    import shlex
+
+    log.out("Stack trace:")
+    # filter out some pointless stuff:
+    # 1) anything coming from inside python at the end (don't care)
+    # 2) runner.py entries at the beginning if there's more (also don't care)
+    stk = list(traceback.extract_tb(e.__traceback__))
+    # first the python ones
+    while len(stk) > 0:
+        if not stk[-1].filename.startswith(rtpath):
+            stk.pop()
+        else:
+            break
+    # now the runner.pys if needed
+    if len(stk) > 0 and not stk[-1].filename.endswith("/runner.py"):
+        nrunner = 0
+        for fs in stk:
+            if not fs.filename.endswith("/runner.py"):
+                break
+            nrunner += 1
+        stk = stk[nrunner:]
+    # print whatever is left
+    for fs in stk:
+        log.out(f"  {fs.filename}:{fs.lineno}:", end="")
+        log.out_plain(f" in function '{fs.name}'")
+    log.out("Raised exception:")
+    log.out(f"  {type(e).__name__}: ", end="")
+    match type(e):
+        case subprocess.CalledProcessError:
+            # a bit nicer handling of cmd
+            # for bwrap commands, skip all the pointless parts of the cmdline
+            fcmd = []
+            in_bwrap = False
+            for ce in map(lambda v: str(v), e.cmd):
+                if ce == "bwrap":
+                    in_bwrap = True
+                    fcmd += ["bwrap", "..."]
+                elif ce == "--":
+                    in_bwrap = False
+                    fcmd.append("--")
+                elif not in_bwrap:
+                    fcmd.append(ce)
+            # now print the command in a nice quoted way
+            log.out_plain(
+                f"command '{shlex.join(fcmd)}' failed with exit code {e.returncode}"
+            )
+        case _:
+            log.out_plain(str(e))
 
 
 def binary_bootstrap(tgt):
@@ -1589,7 +1642,6 @@ def do_pkg(tgt, pkgn=None, force=None, check=None, stage=None):
 def _bulkpkg(pkgs, statusf, do_build, do_raw):
     import pathlib
     import graphlib
-    import traceback
 
     from cbuild.core import logger, template, chroot, errors, build
 
@@ -1621,18 +1673,18 @@ def _bulkpkg(pkgs, statusf, do_build, do_raw):
             return False
         except errors.TracebackException as e:
             log.out_red(str(e))
-            traceback.print_exc(file=log.estream)
+            short_traceback(e, log)
             failed = True
             return False
         except errors.PackageException as e:
             e.pkg.log_red(f"ERROR: {e}", e.end)
             if e.bt:
-                traceback.print_exc(file=log.estream)
+                short_traceback(e, log)
             failed = True
             return False
-        except Exception:
+        except Exception as e:
             logger.get().out_red("A failure has occurred!")
-            traceback.print_exc(file=log.estream)
+            short_traceback(e, log)
             failed = True
             return False
         # signal we're continuing
@@ -2117,7 +2169,6 @@ def do_bump_pkgrel(tgt):
 def fire():
     import sys
     import shutil
-    import traceback
     import subprocess
 
     from cbuild.core import chroot, logger, template, profile
@@ -2252,16 +2303,16 @@ def fire():
         sys.exit(1)
     except errors.TracebackException as e:
         logger.get().out_red(str(e))
-        traceback.print_exc(file=logger.get().estream)
+        short_traceback(e, logger.get())
         sys.exit(1)
     except errors.PackageException as e:
         e.pkg.log_red(f"ERROR: {e}", e.end)
         if e.bt:
-            traceback.print_exc(file=logger.get().estream)
+            short_traceback(e, logger.get())
         sys.exit(1)
-    except Exception:
+    except Exception as e:
         logger.get().out_red("A failure has occurred!")
-        traceback.print_exc(file=logger.get().estream)
+        short_traceback(e, logger.get())
         sys.exit(1)
     finally:
         if opt_mdirtemp and not opt_keeptemp:

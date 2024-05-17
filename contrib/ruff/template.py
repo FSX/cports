@@ -1,5 +1,5 @@
 pkgname = "ruff"
-pkgver = "0.4.1"
+pkgver = "0.4.4"
 pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
@@ -14,9 +14,13 @@ maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://docs.astral.sh/ruff"
 source = f"https://github.com/astral-sh/ruff/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "7213ad13b15e766fb4f5d2fa24ffe1a1a55b47822a159e3c8f64b4a0e6ebca49"
+sha256 = "36d900e3514739a9149363a087512222895f15244bd6612e299259be8ac8c1df"
 # generates completions with host bin
 options = ["!cross"]
+
+
+if self.profile().arch == "riscv64":
+    broken = "runs for hours, uses 100GB memory, dies"
 
 
 def post_patch(self):

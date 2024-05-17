@@ -1,7 +1,7 @@
 pkgname = "imagemagick"
-_pver = "7.1.1-29"
+_pver = "7.1.1-32"
 pkgver = _pver.replace("-", ".")
-pkgrel = 2
+pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
     "--disable-static",
@@ -31,7 +31,7 @@ configure_args = [
     "--with-xml",
     "--with-zlib",
     "--with-zstd",
-    "--with-perl-options=INSTALLDIRS=vendor",
+    "--with-perl-options=INSTALLDIRS=vendor INSTALL_BASE=",
     "--with-dejavu-font-dir=/usr/share/fonts/dejavu",
     "--with-gs-font-dir=/usr/share/fonts/Type1",
     # TODO later
@@ -81,7 +81,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "ImageMagick"
 url = "https://www.imagemagick.org"
 source = f"https://github.com/ImageMagick/ImageMagick/archive/{_pver}.tar.gz"
-sha256 = "27bd25f945efdd7e38f6f9845a7c0a391fdb732f652dda140b743769c5f106e8"
+sha256 = "fda0c1a5fdf511721893014370a6303413c70e0c11f2b543a7a4aff36f8c6e92"
 # runs out of file descriptors
 options = ["!cross", "!check"]
 
