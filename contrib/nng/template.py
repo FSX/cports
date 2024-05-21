@@ -1,10 +1,11 @@
 pkgname = "nng"
-pkgver = "1.7.0"
+pkgver = "1.8.0"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
-    "-DNNG_ENABLE_TLS=ON",
+    "-DNNG_ENABLE_TLS=OFF",
     "-DBUILD_SHARED_LIBS=ON",
+    "-DNNG_ENABLE_COMPAT=OFF",
 ]
 hostmakedepends = [
     "cmake",
@@ -18,8 +19,8 @@ pkgdesc = "High-Performance Scalability Protocols NextGen"
 maintainer = "fsx <frank@61924.nl>"
 license = "MIT"
 url = "https://nng.nanomsg.org"
-source = "https://github.com/nanomsg/nng/archive/refs/tags/v1.7.0.tar.gz"
-sha256 = "668325161637a0debcf7fb4340919b81e74b66d38bc7a663e8b55b7e0abd7f57"
+source = "https://github.com/nanomsg/nng/archive/refs/tags/v1.8.0.tar.gz"
+sha256 = "cfacfdfa35c1618a28bb940e71f774a513dcb91292999696b4346ad8bfb5baff"
 # Some tests need internet.
 options = ["!check"]
 
