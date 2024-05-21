@@ -1,13 +1,13 @@
 pkgname = "man-pages"
-pkgver = "6.7"
-pkgrel = 0
+pkgver = "6.8"
+pkgrel = 1
 hostmakedepends = ["gmake", "gsed", "bash"]
 pkgdesc = "Linux Documentation Project manual pages"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://man7.org/linux/man-pages/index.html"
 source = f"$(KERNEL_SITE)/docs/man-pages/{pkgname}-{pkgver}.tar.xz"
-sha256 = "82403ad4bc17aadb924f68638b79d6930b2cbd551531248a7a9688779db4efb2"
+sha256 = "b9c6b0a420f839148be04b2fc13a85692313728d54d47c69c8a138379665d226"
 options = ["!autosplit"]
 
 
@@ -39,4 +39,4 @@ def _devel(self):
     self.pkgdesc = f"{pkgdesc} (development pages)"
     self.options = ["!autosplit"]
 
-    return ["usr/share/man/man[23]"]
+    return ["usr/share/man/man[23]*"]

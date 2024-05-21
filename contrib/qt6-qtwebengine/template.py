@@ -1,5 +1,5 @@
 pkgname = "qt6-qtwebengine"
-pkgver = "6.7.0"
+pkgver = "6.7.1"
 pkgrel = 1
 archs = ["aarch64", "ppc64le", "x86_64"]
 build_style = "cmake"
@@ -80,7 +80,7 @@ license = (
 )
 url = "https://www.qt.io"
 source = f"https://download.qt.io/official_releases/qt/{pkgver[:-2]}/{pkgver}/submodules/qtwebengine-everywhere-src-{pkgver}.tar.xz"
-sha256 = "1a5ba443635dc1f439ab802ac6d761b8def5ebb24e5219bb7289288e72c147de"
+sha256 = "53f08012609a7d949b0e951728ac2364a06466325ffd163b56a87c3fd021dc44"
 debug_level = 1  # defatten, especially with LTO
 tool_flags = {
     "CFLAGS": [
@@ -97,6 +97,11 @@ tool_flags = {
 hardening = ["!int", "!scp"]
 # lol
 options = ["!check", "!cross"]
+
+
+def post_install(self):
+    self.rm(self.destdir / "usr/lib/qt6/bin/testbrowser")
+    self.rm(self.destdir / "usr/lib/qt6/libexec/gn")
 
 
 @subpackage("qt6-qtwebengine-devel")

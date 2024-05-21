@@ -431,6 +431,7 @@ core_fields = [
     ("replaces", [], list, False, True, False),
     ("replaces_priority", 0, int, False, True, True),
     ("install_if", [], list, False, True, False),
+    ("ignore_shlibs", [], list, False, True, False),
     # build systems
     ("configure_args", [], list, False, False, False),
     ("configure_script", "configure", str, False, False, False),
@@ -532,6 +533,7 @@ core_fields_priority = [
     ("replaces", True),
     ("replaces_priority", True),
     ("install_if", True),
+    ("ignore_shlibs", True),
     ("triggers", True),
     ("scriptlets", True),
     ("origin", True),
@@ -2274,7 +2276,11 @@ def read_mod(
 
     def subpkg_deco(spkgname, cond=True, alternative=None):
         def deco(f):
-            ret.all_subpackages.append(spkgname)
+            if alternative:
+                pn = f"{alternative}-{spkgname}-default"
+            else:
+                pn = spkgname
+            ret.all_subpackages.append(pn)
             if cond:
                 ret.subpackages.append((spkgname, f, alternative))
 
