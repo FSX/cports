@@ -13,11 +13,15 @@ opt_bwcmd = "bwrap"
 opt_cflags = "-O2"
 opt_cxxflags = "-O2"
 opt_fflags = "-O2"
+opt_timing = False
 opt_arch = None
 opt_harch = None
 opt_gen_dbg = True
 opt_check = True
 opt_ccache = False
+opt_sccache = False
+opt_tltocache = False
+opt_tltocachesize = "10g"
 opt_comp = "zstd"
 opt_makejobs = 0
 opt_lthreads = 0
@@ -46,6 +50,7 @@ opt_allowcat = "main contrib user"
 opt_restricted = False
 opt_updatecheck = False
 opt_acceptsum = False
+opt_maint = "unknown <cports@local>"
 
 #
 # INITIALIZATION ROUTINES
@@ -96,20 +101,32 @@ def handle_options():
     global global_cfg
     global cmdline
 
-    global opt_apkcmd, opt_bwcmd, opt_dryrun, opt_bulkcont
-    global opt_cflags, opt_cxxflags, opt_fflags
-    global opt_arch, opt_harch, opt_gen_dbg, opt_check, opt_ccache
-    global opt_makejobs, opt_lthreads, opt_nocolor, opt_signkey
+    global opt_apkcmd, opt_bwcmd, opt_dryrun, opt_bulkcont, opt_timing
+    global opt_arch, opt_cflags, opt_cxxflags, opt_fflags, opt_tltocache
+    global opt_harch, opt_gen_dbg, opt_check, opt_ccache, opt_tltocachesize
+    global opt_sccache, opt_makejobs, opt_lthreads, opt_nocolor, opt_signkey
     global opt_unsigned, opt_force, opt_mdirtemp, opt_allowcat, opt_restricted
     global opt_nonet, opt_dirty, opt_statusfd, opt_keeptemp, opt_forcecheck
     global opt_checkfail, opt_stage, opt_altrepo, opt_stagepath, opt_bldroot
     global opt_blddir, opt_pkgpath, opt_srcpath, opt_cchpath, opt_updatecheck
-    global opt_acceptsum, opt_comp
+    global opt_acceptsum, opt_comp, opt_maint
 
     # respect NO_COLOR
     opt_nocolor = ("NO_COLOR" in os.environ) or not sys.stdout.isatty()
 
-    parser = argparse.ArgumentParser(description="Chimera Linux build system.")
+    # build epilog
+    epilog = ["available commands:"]
+    for ch in command_handlers:
+        chn = ch
+        if len(chn) < 24:
+            chn += " " * (20 - len(chn))
+        epilog.append(f"  {chn}  {command_handlers[ch][1]}.")
+
+    parser = argparse.ArgumentParser(
+        description="Chimera Linux build system.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="\n".join(epilog),
+    )
 
     parser.add_argument(
         "-c",
@@ -298,13 +315,19 @@ def handle_options():
     if "build" in global_cfg:
         bcfg = global_cfg["build"]
 
+        opt_timing = bcfg.getboolean("timing", fallback=opt_timing)
         opt_gen_dbg = bcfg.getboolean("build_dbg", fallback=opt_gen_dbg)
         opt_ccache = bcfg.getboolean("ccache", fallback=opt_ccache)
+        opt_sccache = bcfg.getboolean("sccache", fallback=opt_sccache)
+        opt_tltocache = bcfg.getboolean("thinlto_cache", fallback=opt_tltocache)
         opt_check = bcfg.getboolean("check", fallback=opt_check)
         opt_checkfail = bcfg.getboolean("check_fail", fallback=opt_checkfail)
         opt_stage = bcfg.getboolean("keep_stage", fallback=opt_stage)
         opt_makejobs = bcfg.getint("jobs", fallback=opt_makejobs)
         opt_lthreads = bcfg.getint("link_threads", fallback=opt_lthreads)
+        opt_tltocachesize = bcfg.get(
+            "thinlto_cache_size", fallback=opt_tltocachesize
+        )
         opt_bwcmd = bcfg.get("bwrap", fallback=opt_bwcmd)
         opt_arch = bcfg.get("arch", fallback=opt_arch)
         opt_harch = bcfg.get("host_arch", fallback=opt_harch)
@@ -317,6 +340,7 @@ def handle_options():
         opt_srcpath = bcfg.get("sources", fallback=opt_srcpath)
         opt_cchpath = bcfg.get("cbuild_cache_path", fallback=opt_cchpath)
         opt_allowcat = bcfg.get("categories", fallback=opt_allowcat)
+        opt_maint = bcfg.get("maintainer", fallback=opt_maint)
         opt_restricted = bcfg.getboolean(
             "allow_restricted", fallback=opt_restricted
         )
@@ -487,6 +511,7 @@ def short_traceback(e, log):
     import traceback
     import subprocess
     import shlex
+    from cbuild.core import pkg as pkgm
 
     log.out("Stack trace:")
     # filter out some pointless stuff:
@@ -512,7 +537,10 @@ def short_traceback(e, log):
         log.out(f"  {fs.filename}:{fs.lineno}:", end="")
         log.out_plain(f" in function '{fs.name}'")
     log.out("Raised exception:")
-    log.out(f"  {type(e).__name__}: ", end="")
+    if hasattr(e, "filename"):
+        log.out(f"  {type(e).__name__} ({e.filename}): ", end="")
+    else:
+        log.out(f"  {type(e).__name__}: ", end="")
     match type(e):
         case subprocess.CalledProcessError:
             # a bit nicer handling of cmd
@@ -534,6 +562,16 @@ def short_traceback(e, log):
             )
         case _:
             log.out_plain(str(e))
+    curpkg = pkgm.failed()
+    if curpkg:
+        if hasattr(curpkg, "current_phase"):
+            log.out_orange(
+                f"Phase '{curpkg.current_phase}' failed for package '{curpkg.pkgname}'."
+            )
+        else:
+            log.out_orange(
+                f"Failure during build of package '{curpkg.pkgname}'."
+            )
 
 
 def binary_bootstrap(tgt):
@@ -581,7 +619,7 @@ def bootstrap(tgt):
     paths.set_stage(0)
     paths.reinit_buildroot(oldmdir, 0)
 
-    if not chroot.chroot_check(True):
+    if not chroot.chroot_check(True, False):
         logger.get().out("cbuild: bootstrapping stage 0")
 
         # extra program checks
@@ -625,7 +663,7 @@ def bootstrap(tgt):
         chroot.initdb()
         chroot.repo_init()
         if rp:
-            build.build(tgt, rp, {})
+            build.build(tgt, rp, {}, maintainer=opt_maint)
         do_unstage(tgt, True)
         shutil.rmtree(paths.bldroot())
         chroot.install()
@@ -638,7 +676,7 @@ def bootstrap(tgt):
     # set build root to stage 1 for chroot check
     paths.reinit_buildroot(oldmdir, 1)
 
-    if not chroot.chroot_check(True):
+    if not chroot.chroot_check(True, False):
         logger.get().out("cbuild: bootstrapping stage 1")
         # use stage 0 build root to build, but build into stage 1 repo
         paths.reinit_buildroot(oldmdir, 0)
@@ -658,7 +696,7 @@ def bootstrap(tgt):
     # set build root to stage 2 for chroot check
     paths.reinit_buildroot(oldmdir, 2)
 
-    if not chroot.chroot_check(True):
+    if not chroot.chroot_check(True, False):
         logger.get().out("cbuild: bootstrapping stage 2")
         # use stage 1 build root to build, but build into stage 2 repo
         paths.reinit_buildroot(oldmdir, 1)
@@ -675,7 +713,7 @@ def bootstrap(tgt):
     # set build root to stage 3 for chroot check
     paths.reinit_buildroot(oldmdir, 3)
 
-    if not chroot.chroot_check(True):
+    if not chroot.chroot_check(True, False):
         logger.get().out("cbuild: bootstrapping stage 3")
         # use stage 1 build root to build, but build into stage 2 repo
         paths.reinit_buildroot(oldmdir, 2)
@@ -714,32 +752,6 @@ def do_keygen(tgt):
     sign.register_key(keyn)
 
     sign.keygen(keysize, global_cfg, os.path.expanduser(cmdline.config))
-
-
-def do_chroot(tgt):
-    from cbuild.core import chroot, paths
-    from cbuild.util import compiler
-
-    if opt_mdirtemp:
-        chroot.install()
-    paths.prepare()
-    chroot.shell_update(not opt_nonet)
-    chroot.enter(
-        "/usr/bin/sh",
-        "-i",
-        fakeroot=True,
-        new_session=False,
-        mount_binpkgs=True,
-        mount_cbuild_cache=True,
-        env={
-            "HOME": "/tmp",
-            "TERM": "linux",
-            "CBUILD_SHELL": "1",
-            "PS1": "\\u@\\h: \\w$ ",
-            "SHELL": "/bin/sh",
-        },
-        lldargs=compiler._get_lld_cpuargs(opt_lthreads),
-    )
 
 
 def do_clean(tgt):
@@ -889,6 +901,11 @@ def do_prune_removed(tgt):
             continue
         # finally index
         _prune(repo)
+
+
+def do_prune_pkgs(cmd):
+    do_prune_obsolete(cmd)
+    do_prune_removed(cmd)
 
 
 def do_index(tgt):
@@ -1527,7 +1544,6 @@ def do_update_check(tgt):
             tmpl.pkgname,
         ),
     )
-
     for tmpl in stmpls:
         if tmpl.maintainer != maint:
             maint = tmpl.maintainer
@@ -1588,6 +1604,7 @@ def do_dump(tgt):
 
 def do_pkg(tgt, pkgn=None, force=None, check=None, stage=None):
     from cbuild.core import build, chroot, template, errors
+    from cbuild.util import compiler
 
     if force is None:
         force = opt_force
@@ -1598,31 +1615,64 @@ def do_pkg(tgt, pkgn=None, force=None, check=None, stage=None):
     else:
         bstage = stage
     if not pkgn:
-        if len(cmdline.command) <= 1:
+        if len(cmdline.command) <= 1 and tgt != "chroot":
             raise errors.CbuildException(f"{tgt} needs a package name")
         elif len(cmdline.command) > 2:
             raise errors.CbuildException(f"{tgt} needs only one package")
-        pkgn = cmdline.command[1]
-    rp = template.read_pkg(
-        pkgn,
-        opt_arch if opt_arch else chroot.host_cpu(),
-        force,
-        check,
-        (opt_makejobs, opt_lthreads),
-        opt_gen_dbg,
-        opt_ccache,
-        None,
-        target=tgt if (tgt != "pkg") else None,
-        force_check=opt_forcecheck,
-        stage=bstage,
-        allow_restricted=opt_restricted,
+        if len(cmdline.command) > 1:
+            pkgn = cmdline.command[1]
+    rp = (
+        template.read_pkg(
+            pkgn,
+            opt_arch if opt_arch else chroot.host_cpu(),
+            force,
+            check,
+            (opt_makejobs, opt_lthreads),
+            opt_gen_dbg,
+            (
+                opt_ccache,
+                opt_sccache,
+                opt_tltocachesize if opt_tltocache else None,
+            ),
+            None,
+            target=tgt if (tgt != "pkg") else None,
+            force_check=opt_forcecheck,
+            stage=bstage,
+            allow_restricted=opt_restricted,
+        )
+        if pkgn
+        else None
     )
     if opt_mdirtemp:
         chroot.install()
-    elif not stage and not chroot.chroot_check():
-        raise errors.CbuildException(
-            "build root not found (have you boootstrapped?)"
+    elif not stage:
+        chroot.chroot_check()
+    if tgt == "chroot":
+        chroot.shell_update(not opt_nonet)
+        if rp and (rp.builddir / rp.wrksrc).is_dir():
+            curwrk = rp.chroot_builddir / rp.wrksrc
+        elif rp and rp.builddir.is_dir():
+            curwrk = rp.chroot_builddir
+        else:
+            curwrk = None
+        chroot.enter(
+            "/usr/bin/sh",
+            "-i",
+            fakeroot=True,
+            new_session=False,
+            mount_binpkgs=True,
+            mount_cbuild_cache=True,
+            env={
+                "HOME": "/tmp",
+                "TERM": "linux",
+                "CBUILD_SHELL": "1",
+                "PS1": "\\u@\\h: \\w$ ",
+                "SHELL": "/bin/sh",
+            },
+            wrkdir=curwrk,
+            lldargs=compiler._get_lld_cpuargs(opt_lthreads),
         )
+        return
     # don't remove builddir/destdir
     chroot.prepare_arch(opt_arch, opt_dirty)
     build.build(
@@ -1634,6 +1684,7 @@ def do_pkg(tgt, pkgn=None, force=None, check=None, stage=None):
         check_fail=opt_checkfail,
         update_check=opt_updatecheck,
         accept_checksums=opt_acceptsum,
+        maintainer=opt_maint,
     )
     if tgt == "pkg" and (not opt_stage or bstage < 3):
         do_unstage(tgt, bstage < 3)
@@ -1784,7 +1835,11 @@ def _bulkpkg(pkgs, statusf, do_build, do_raw):
                 opt_check,
                 (opt_makejobs, opt_lthreads),
                 opt_gen_dbg,
-                opt_ccache,
+                (
+                    opt_ccache,
+                    opt_sccache,
+                    opt_tltocachesize if opt_tltocache else None,
+                ),
                 None,
                 force_check=opt_forcecheck,
                 bulk_mode=True,
@@ -1863,6 +1918,7 @@ def _bulkpkg(pkgs, statusf, do_build, do_raw):
                         check_fail=opt_checkfail,
                         update_check=opt_updatecheck,
                         accept_checksums=opt_acceptsum,
+                        maintainer=opt_maint,
                     )
                 ):
                     statusf.write(f"{pn} ok\n")
@@ -2063,8 +2119,7 @@ def do_prepare_upgrade(tgt):
 
     pkgn = cmdline.command[1]
 
-    if not chroot.chroot_check():
-        raise errors.CbuildException("prepare-upgrade needs a bldroot")
+    chroot.chroot_check()
 
     tmpl = template.read_pkg(
         pkgn,
@@ -2165,6 +2220,83 @@ def do_bump_pkgrel(tgt):
 # MAIN ENTRYPOINT
 #
 
+command_handlers = {
+    "binary-bootstrap": (binary_bootstrap, "Set up the build container"),
+    "bootstrap": (bootstrap, "Bootstrap the build container from scratch"),
+    "bootstrap-update": (bootstrap_update, "Update the build container"),
+    "build": (do_pkg, "Run up to build phase of a template"),
+    "bulk-pkg": (do_bulkpkg, "Perform a bulk build"),
+    "bulk-print": (
+        lambda cmd: do_bulkpkg(cmd, False),
+        "Print a bulk build list",
+    ),
+    "bulk-raw": (
+        lambda cmd: do_bulkpkg(cmd, True, True),
+        "Perform an unsorted bulk build",
+    ),
+    "bump-pkgrel": (do_bump_pkgrel, "Increase the pkgrel of a template"),
+    "check": (do_pkg, "Run up to check phase of a template"),
+    "chroot": (do_pkg, "Enter an interactive bldroot chroot"),
+    "clean": (do_clean, "Clean the build directory"),
+    "configure": (do_pkg, "Run up to configure phase of a template"),
+    "cycle-check": (
+        do_cycle_check,
+        "Perform a depcycle check on all templates",
+    ),
+    "deps": (do_pkg, "Run up to the deps installation phase of a template"),
+    "dump": (do_dump, "Dump the metadata of all templates to the terminal"),
+    "fetch": (do_pkg, "Run up to fetch phase of a template"),
+    "extract": (do_pkg, "Run up to extract phase of a template"),
+    "index": (do_index, "Reindex local repositories"),
+    "install": (do_pkg, "Run up to install phase of a template"),
+    "keygen": (do_keygen, "Generate a new signing key"),
+    "lint": (do_lint, "Parse a template and lint it"),
+    "list-unbuilt": (
+        lambda cmd: do_print_unbuilt(cmd, True),
+        "Print a newline-separated versioned list of unbuilt templates",
+    ),
+    "patch": (do_pkg, "Run up to patch phase of a template"),
+    "pkg": (do_pkg, "Build a package"),
+    "prepare": (do_pkg, "Run up to prepare phase of a template"),
+    "prepare-upgrade": (
+        do_prepare_upgrade,
+        "Update template checksums and reset pkgrel",
+    ),
+    "print-build-graph": (
+        do_print_build_graph,
+        "Print the build graph of a template",
+    ),
+    "print-unbuilt": (
+        lambda cmd: do_print_unbuilt(cmd, False),
+        "Print a space-separated list of unbuilt templates",
+    ),
+    "prune-pkgs": (
+        do_prune_pkgs,
+        "Prune obsolete and removed packages from local repos",
+    ),
+    "prune-obsolete": (
+        do_prune_obsolete,
+        "Prune obsolete packages from local repos",
+    ),
+    "prune-removed": (
+        do_prune_removed,
+        "Prune removed packages from local repos",
+    ),
+    "prune-sources": (do_prune_sources, "Prune local sources"),
+    "relink-subpkgs": (do_relink_subpkgs, "Remake subpackage symlinks"),
+    "remove-autodeps": (
+        do_remove_autodeps,
+        "Remove build dependencies from bldroot",
+    ),
+    "unstage": (do_unstage, "Unstage local repositories"),
+    "unstage-check-remote": (
+        check_unstage,
+        "Try unstaging local packages against remote repositories",
+    ),
+    "update-check": (do_update_check, "Check a template for upstream updates"),
+    "zap": (do_zap, "Remove the bldroot"),
+}
+
 
 def fire():
     import sys
@@ -2175,7 +2307,7 @@ def fire():
     from cbuild.core import paths, errors
     from cbuild.apk import cli
 
-    logger.init(not opt_nocolor)
+    logger.init(not opt_nocolor, opt_timing)
 
     # set host arch to provide early guarantees
     if opt_harch:
@@ -2184,7 +2316,7 @@ def fire():
         chroot.set_host(cli.get_arch())
 
     # check container and while at it perform arch checks
-    chroot.chroot_check()
+    chroot.chroot_check(error=False)
 
     # ensure we've got a signing key
     if not opt_signkey and not opt_unsigned and cmdline.command[0] != "keygen":
@@ -2209,7 +2341,9 @@ def fire():
     try:
         aret = subprocess.run([paths.apk(), "--version"], capture_output=True)
     except FileNotFoundError:
-        logger.get().out_red(f"cbuild: apk not found ({paths.apk()}")
+        logger.get().out_red(
+            f"cbuild: apk not found (expected path: {paths.apk()})"
+        )
         sys.exit(1)
 
     if not aret.stdout.startswith(b"apk-tools 3"):
@@ -2219,7 +2353,9 @@ def fire():
     try:
         subprocess.run([paths.bwrap(), "--version"], capture_output=True)
     except FileNotFoundError:
-        logger.get().out_red(f"cbuild: bwrap not found ({paths.bwrap()}")
+        logger.get().out_red(
+            f"cbuild: bwrap not found (expected path: {paths.bwrap()})"
+        )
         sys.exit(1)
 
     template.register_hooks()
@@ -2227,73 +2363,11 @@ def fire():
 
     try:
         cmd = cmdline.command[0]
-        match cmd:
-            case "binary-bootstrap":
-                binary_bootstrap(cmd)
-            case "bootstrap":
-                bootstrap(cmd)
-            case "bootstrap-update":
-                bootstrap_update(cmd)
-            case "bulk-pkg":
-                do_bulkpkg(cmd)
-            case "bulk-print":
-                do_bulkpkg(cmd, False)
-            case "bulk-raw":
-                do_bulkpkg(cmd, True, True)
-            case "bump-pkgrel":
-                do_bump_pkgrel(cmd)
-            case "check" | "install" | "pkg":
-                do_pkg(cmd)
-            case "chroot":
-                do_chroot(cmd)
-            case "clean":
-                do_clean(cmd)
-            case "cycle-check":
-                do_cycle_check(cmd)
-            case "dump":
-                do_dump(cmd)
-            case "fetch" | "extract" | "prepare":
-                do_pkg(cmd)
-            case "index":
-                do_index(cmd)
-            case "keygen":
-                do_keygen(cmd)
-            case "lint":
-                do_lint(cmd)
-            case "list-unbuilt":
-                do_print_unbuilt(cmd, True)
-            case "patch" | "configure" | "build":
-                do_pkg(cmd)
-            case "prepare-upgrade":
-                do_prepare_upgrade(cmd)
-            case "print-build-graph":
-                do_print_build_graph(cmd)
-            case "print-unbuilt":
-                do_print_unbuilt(cmd, False)
-            case "prune-pkgs":
-                do_prune_obsolete(cmd)
-                do_prune_removed(cmd)
-            case "prune-obsolete":
-                do_prune_obsolete(cmd)
-            case "prune-removed":
-                do_prune_removed(cmd)
-            case "prune-sources":
-                do_prune_sources(cmd)
-            case "relink-subpkgs":
-                do_relink_subpkgs(cmd)
-            case "remove-autodeps":
-                do_remove_autodeps(cmd)
-            case "unstage":
-                do_unstage(cmd)
-            case "unstage-check-remote":
-                check_unstage(cmd)
-            case "update-check":
-                do_update_check(cmd)
-            case "zap":
-                do_zap(cmd)
-            case _:
-                logger.get().out_red(f"cbuild: invalid target {cmd}")
-                sys.exit(1)
+        if cmd in command_handlers:
+            command_handlers[cmd][0](cmd)
+        else:
+            logger.get().out_red(f"cbuild: invalid target {cmd}")
+            sys.exit(1)
     except template.SkipPackage:
         pass
     except errors.CbuildException as e:

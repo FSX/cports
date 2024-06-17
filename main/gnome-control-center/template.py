@@ -1,8 +1,8 @@
 pkgname = "gnome-control-center"
-pkgver = "46.1"
+pkgver = "46.2"
 pkgrel = 0
 build_style = "meson"
-make_check_wrapper = ["weston-headless-run"]
+make_check_wrapper = ["wlheadless-run", "--"]
 hostmakedepends = [
     "gettext",
     "glib-devel",
@@ -61,7 +61,7 @@ depends = [
     "tecla",
     "udisks",
 ]
-checkdepends = ["python-dbusmock", "weston"] + depends
+checkdepends = ["python-dbusmock", "xwayland-run"] + depends
 pkgdesc = "GNOME control center"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
@@ -69,7 +69,7 @@ url = "https://gitlab.gnome.org/GNOME/gnome-control-center"
 source = (
     f"$(GNOME_SITE)/{pkgname}/{pkgver.split('.')[0]}/{pkgname}-{pkgver}.tar.xz"
 )
-sha256 = "81792423019deda1d2a074c1ecf6a7e6ef3172c09cbe6f4d7995a4b5dea28312"
+sha256 = "6335c6cb8164e574db521fff61cfa3dfaa55f1db66ae3bca02750a193e1c4f3d"
 
 
 @subpackage("gnome-control-center-devel")

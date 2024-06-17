@@ -1,6 +1,6 @@
 pkgname = "pipx"
-pkgver = "1.5.0"
-pkgrel = 0
+pkgver = "1.6.0"
+pkgrel = 1
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -22,7 +22,7 @@ maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
 url = "https://github.com/pypa/pipx"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "fffc8c7419d35830bb68515dd285105c1cd7af14d69f813bc166e81b7e2d9df4"
+sha256 = "427bd838bff3c4e5efcc39858eb5e1b86cc5e3468ad939ae44312ac5bb3405ad"
 # missing some unknown deps
 options = ["!check"]
 

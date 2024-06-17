@@ -1,5 +1,5 @@
 pkgname = "python-responses"
-pkgver = "0.25.1"
+pkgver = "0.25.3"
 pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
@@ -18,6 +18,6 @@ maintainer = "ttyyls <contact@behri.org>"
 license = "Apache-2.0"
 url = "https://github.com/getsentry/responses"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "54b552af2a48bc1af563a9397df3ffa8c2d761e123a4bbc13d23568d4cb628b7"
+sha256 = "3c3f3cd9f9c00bfe962a895cdbd961fd33d258c1c1f66b79c7a3ceff6ec1615e"
 # deprecated check dependencies
 options = ["!check"]

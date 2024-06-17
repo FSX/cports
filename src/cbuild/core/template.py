@@ -420,6 +420,7 @@ core_fields = [
     # build directory and patches
     ("build_wrksrc", "", str, False, False, False),
     ("patch_args", [], list, False, False, False),
+    ("prepare_after_patch", False, bool, False, False, False),
     # dependency lists
     ("checkdepends", [], list, False, False, False),
     ("hostmakedepends", [], list, False, False, False),
@@ -461,7 +462,7 @@ core_fields = [
     ("tools", {}, dict, False, False, False),
     ("tool_flags", {}, dict, False, False, False),
     ("env", {}, dict, False, False, False),
-    ("debug_level", 2, int, False, False, False),
+    ("debug_level", -1, int, False, False, False),
     # packaging
     ("origin", None, str, False, True, True),
     ("triggers", [], list, False, True, False),
@@ -498,6 +499,7 @@ core_fields_priority = [
     ("archs", True),
     ("build_wrksrc", True),
     ("build_style", True),
+    ("prepare_after_patch", True),
     ("configure_script", True),
     ("configure_args", True),
     ("configure_env", True),
@@ -1221,6 +1223,14 @@ class Template(Package):
             cenv["CCACHE_COMPRESS"] = "1"
             cenv["CCACHE_BASEDIR"] = str(self.chroot_cwd)
 
+        if (
+            self.use_sccache
+            and (self.bldroot_path / "usr/bin/sccache").exists()
+        ):
+            cenv["RUSTC_WRAPPER"] = "/usr/bin/sccache"
+            cenv["SCCACHE_DIR"] = "/cbuild_cache/sccache"
+            cenv["SCCACHE_IDLE_TIMEOUT"] = "30"
+
         cenv.update(self.tools)
 
         cenv["CC"] = self.get_tool("CC")
@@ -1230,15 +1240,14 @@ class Template(Package):
         cenv["PKG_CONFIG"] = self.get_tool("PKG_CONFIG")
 
         with self.profile("host") as hpf:
-            cenv["BUILD_CC"] = self.get_tool("CC")
-            cenv["BUILD_CXX"] = self.get_tool("CXX")
-            cenv["BUILD_CPP"] = self.get_tool("CPP")
-            cenv["BUILD_LD"] = self.get_tool("LD")
-            cenv["BUILD_PKG_CONFIG"] = self.get_tool("PKG_CONFIG")
+            for k in ["CC", "CXX", "CPP", "LD", "PKG_CONFIG"]:
+                cenv[f"BUILD_{k}"] = cenv[f"{k}_FOR_BUILD"] = self.get_tool(k)
 
             # cflags and so on
             for k in self.tool_flags:
-                cenv["BUILD_" + k] = self.get_tool_flags(k, shell=True)
+                cenv[f"BUILD_{k}"] = cenv[f"{k}_FOR_BUILD"] = (
+                    self.get_tool_flags(k, shell=True)
+                )
 
             if hpf.triplet:
                 cenv["CBUILD_HOST_TRIPLET"] = hpf.triplet
@@ -1273,6 +1282,11 @@ class Template(Package):
         lld_args = compiler._get_lld_cpuargs(self.link_threads)
         if self.options["linkundefver"]:
             lld_args += ["--undefined-version"]
+        if self.use_ltocache:
+            lld_args += [
+                f"--thinlto-cache-policy=cache_size_bytes={self.use_ltocache}",
+                "--thinlto-cache-dir=/cbuild_cache/lld_thinlto_cache",
+            ]
 
         return chroot.enter(
             cmd,
@@ -1557,6 +1571,14 @@ class Template(Package):
 
     def install_svscript(self, src, name=None):
         self.install_file(src, "etc/dinit.d/scripts", mode=0o755, name=name)
+
+    def install_tmpfiles(self, src, name=None):
+        svname = name or self.pkgname
+        self.install_file(src, "usr/lib/tmpfiles.d", name=f"{svname}.conf")
+
+    def install_sysusers(self, src, name=None):
+        svname = name or self.pkgname
+        self.install_file(src, "usr/lib/sysusers.d", name=f"{svname}.conf")
 
     def install_link(self, dest, tgt, absolute=False):
         dest = pathlib.Path(dest)
@@ -2194,7 +2216,7 @@ def read_mod(
     run_check,
     jobs,
     build_dbg,
-    use_ccache,
+    caches,
     origin,
     resolve=None,
     ignore_missing=False,
@@ -2257,7 +2279,9 @@ def read_mod(
     ret.force_mode = force_mode
     ret.bulk_mode = bulk_mode
     ret.build_dbg = build_dbg
-    ret.use_ccache = use_ccache
+    ret.use_ccache = caches[0] if caches else None
+    ret.use_sccache = caches[1] if caches else None
+    ret.use_ltocache = caches[2] if caches else None
     ret.conf_jobs = jobs[0]
     ret.conf_link_threads = jobs[1]
     ret.stage = stage
@@ -2324,7 +2348,7 @@ def read_pkg(
     run_check,
     jobs,
     build_dbg,
-    use_ccache,
+    caches,
     origin,
     resolve=None,
     ignore_missing=False,
@@ -2342,7 +2366,7 @@ def read_pkg(
         run_check,
         jobs,
         build_dbg,
-        use_ccache,
+        caches,
         origin,
         resolve,
         ignore_missing,

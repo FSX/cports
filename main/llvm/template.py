@@ -1,5 +1,5 @@
 pkgname = "llvm"
-pkgver = "18.1.5"
+pkgver = "18.1.7"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -49,7 +49,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "Apache-2.0"
 url = "https://llvm.org"
 source = f"https://github.com/llvm/llvm-project/releases/download/llvmorg-{pkgver}/llvm-project-{pkgver}.src.tar.xz"
-sha256 = "3591a52761a7d390ede51af01ea73abfecc4b1d16445f9d019b67a57edd7de56"
+sha256 = "74446ab6943f686391954cbda0d77ae92e8a60c432eff437b8666e121d748ec4"
 # reduce size of debug symbols
 debug_level = 1
 # lto does not kick in until stage 2
@@ -126,6 +126,9 @@ match self.profile().arch:
     # consistently runs out of memory in flang ConvertExpr
     case "ppc64" | "riscv64":
         pass
+    # unsupported on 32 bit cpus
+    case "ppc" | "armhf" | "armv7":
+        pass
     # elsewhere is okay
     case _:
         _enable_flang = _enable_mlir
@@ -145,6 +148,8 @@ match self.profile().arch:
         _arch = "PowerPC"
     case "riscv64":
         _arch = "RISCV64"
+    case "armhf" | "armv7":
+        _arch = "ARM"
     case _:
         broken = f"Unknown CPU architecture: {self.profile().arch}"
 

@@ -1,6 +1,6 @@
 pkgname = "dnscrypt-proxy"
 pkgver = "2.1.5"
-pkgrel = 3
+pkgrel = 4
 build_style = "go"
 hostmakedepends = ["go"]
 pkgdesc = "Tool for securing communications between a client and a DNS resolver"
@@ -24,16 +24,8 @@ def do_build(self):
 
 
 def post_install(self):
-    self.install_file(
-        self.files_path / "sysusers.conf",
-        "usr/lib/sysusers.d",
-        name="dnscrypt-proxy.conf",
-    )
-    self.install_file(
-        self.files_path / "tmpfiles.conf",
-        "usr/lib/tmpfiles.d",
-        name="dnscrypt-proxy.conf",
-    )
+    self.install_sysusers(self.files_path / "sysusers.conf")
+    self.install_tmpfiles(self.files_path / "tmpfiles.conf")
     self.install_file(
         self.files_path / "dnscrypt-proxy.toml", "etc/dnscrypt-proxy"
     )

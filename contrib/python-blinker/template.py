@@ -1,6 +1,6 @@
 pkgname = "python-blinker"
-pkgver = "1.7.0"
-pkgrel = 0
+pkgver = "1.8.2"
+pkgrel = 1
 build_style = "python_pep517"
 hostmakedepends = [
     "python-build",
@@ -8,14 +8,15 @@ hostmakedepends = [
     "python-installer",
     "python-wheel",
 ]
+depends = ["python"]
 checkdepends = ["python-pytest", "python-pytest-asyncio"]
 pkgdesc = "Fast Python in-process signal/event dispatching system"
 maintainer = "firefly-cpp <iztok@iztok.space>"
 license = "MIT"
 url = "https://github.com/pallets-eco/blinker"
 source = f"https://github.com/pallets-eco/blinker/archive/{pkgver}.tar.gz"
-sha256 = "82110f6329696b99ed398a3a0e4e79206bfd34bd35fad69ec3900baa02e1342c"
+sha256 = "8bdbf175087cf3af2c5b13ad247cf832ad03f93daceffff7cbaaae95b63d9581"
 
 
 def post_install(self):
-    self.install_license("LICENSE.rst")
+    self.install_license("LICENSE.txt")

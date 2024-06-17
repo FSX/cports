@@ -1,6 +1,6 @@
 pkgname = "pciutils"
-pkgver = "3.12.0"
-pkgrel = 0
+pkgver = "3.13.0"
+pkgrel = 1
 build_style = "makefile"
 make_cmd = "gmake"
 make_dir = "."
@@ -17,6 +17,7 @@ make_install_args = [
     "SBINDIR=/usr/bin",
     "MANDIR=/usr/share/man",
 ]
+make_use_env = True
 hostmakedepends = ["gmake", "pkgconf"]
 makedepends = ["zlib-devel", "libkmod-devel", "linux-headers"]
 depends = ["hwdata-pci"]
@@ -25,20 +26,21 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later"
 url = "https://mj.ucw.cz/sw/pciutils"
 source = f"https://github.com/pciutils/pciutils/archive/v{pkgver}.tar.gz"
-sha256 = "3a76ca02581fed03d0470ba822e72ee06e492442a990062f9638dec90018505f"
+sha256 = "861fc26151a4596f5c3cb6f97d6c75c675051fa014959e26fb871c8c932ebc67"
 # no check target
 # ld: error: undefined symbol: pci_alloc ... and so on
 options = ["!check", "!lto"]
 
 
+def init_build(self):
+    self.make_build_args += [
+        "CC=" + self.get_tool("CC"),
+        "OPT=" + self.get_cflags(shell=True),
+    ]
+
+
 def pre_build(self):
-    self.make.build(
-        [
-            "SHARED=no",
-            "CC=" + self.get_tool("CC"),
-            "CFLAGS=" + self.get_cflags(shell=True),
-        ]
-    )
+    self.make.build(["SHARED=no"])
     self.mv("lib/libpci.a", "libpci_a")
     self.make.invoke("clean")
 
@@ -47,8 +49,6 @@ def do_install(self):
     self.make.install(["install-lib", "PREFIX=/usr", "STRIP="])
     # static lib
     self.install_file("libpci_a", "usr/lib", name="libpci.a")
-    # fix permissions
-    (self.destdir / f"usr/lib/libpci.so.{pkgver}").chmod(0o755)
     # provided by hwdata-pci
     self.rm(self.destdir / "usr/share/hwdata", recursive=True)
     # we don't want to touch pci.ids

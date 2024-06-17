@@ -1,6 +1,6 @@
 pkgname = "weechat"
-pkgver = "4.2.2"
-pkgrel = 0
+pkgver = "4.3.2"
+pkgrel = 1
 build_style = "cmake"
 configure_args = [
     # no guile available
@@ -11,19 +11,27 @@ configure_args = [
     "-DENABLE_JAVASCRIPT=False",
     # no, aspell available
     "-DENABLE_ENCHANT=True",
-    # missing dependencies
+    # missing dependency (cpputest); tests seem kinda half broken
     "-DENABLE_TESTS=False",
-    "-DENABLE_MAN=False",
-    "-DENABLE_DOC=False",
+    "-DENABLE_MAN=True",
+    "-DENABLE_DOC=True",
+    "-DENABLE_DOC_INCOMPLETE=True",
 ]
-hostmakedepends = ["cmake", "ninja", "pkgconf", "gettext"]
+hostmakedepends = [
+    "asciidoctor",
+    "cmake",
+    "gettext",
+    "ninja",
+    "pkgconf",
+]
 makedepends = [
     # core deps
-    "libgcrypt-devel",
+    "cjson-devel",
     "gnutls-devel",
-    "zstd-devel",
     "libcurl-devel",
+    "libgcrypt-devel",
     "ncurses-devel",
+    "zstd-devel",
     # perl plugin
     "perl",
     # lua plugin
@@ -44,7 +52,7 @@ maintainer = "eater <=@eater.me>"
 license = "GPL-3.0-or-later"
 url = "https://weechat.org"
 source = f"https://weechat.org/files/src/weechat-{pkgver}.tar.gz"
-sha256 = "064856ae2b999ab13e5eb6c40d15333d3afe428d636ed3849f2d48a825379706"
+sha256 = "f3311a523d4b19c1ebed15dab7a2913bd0edabf69be345fe2095ff4e64506537"
 
 
 @subpackage("weechat-devel")

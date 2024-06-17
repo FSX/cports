@@ -513,7 +513,8 @@ the `builddir` and is created automatically.
   build dependencies. When cross-compiling, the cross target environment
   is prepared and target dependencies are installed in it. When the template
   defines a `do_fetch` function, this is run first, as the function may
-  depend on the sandbox being set up. Otherwise, it is run second.
+  depend on the sandbox being set up. Otherwise, it is run second. The `deps`
+  sub-phase can be invoked separately if needed.
 
 * `fetch` During `fetch`, required files are downloaded as defined by the
   `source` template variable by default (or the `do_fetch` function of
@@ -801,8 +802,10 @@ Keep in mind that default values may be overridden by build styles.
   working directory used for configuration. Only used by build styles that
   use such scripts. The default value is `configure`.
 * `debug_level` *(int)* The level to use when generating debug information
-  in the compiler (i.e. `-gN` for C). By default, this is 2, to match the
-  default level of the compiler with `-g`.
+  in the compiler (i.e. `-gN` for C). By default, this is -1, which will
+  determine it according to build profile (typically 2 for 64-bit targets,
+  to match the default level of the compiler with `-g`, and 1 for 32-bit
+  ones to avoid running out of memory).
 * `depends` *(list)* Runtime dependencies of the package. They are not
   installed in the build container, but are checked for availability (and
   built if missing). While these may be just names, you can also specify
@@ -949,6 +952,10 @@ Keep in mind that default values may be overridden by build styles.
 * `patch_args` *(list)* Options passed to `patch` when applying patches,
   in addition to the builtin ones (`-sNp1 -V none`). You can use this to
   override the strip count or pass additional options.
+* `prepare_after_patch` *(bool)* Normally, the `prepare` phase is run before
+  the `patch` phase so that vendored dependencies can be patched. Sometimes
+  it is necessary to patch lockfiles/dependency lists though and then it may
+  be necessary to run `prepare` after that is done.
 * `provider_priority` *(int)* The final tie-breaker when choosing between
   two virtual providers to install. When everything else fails (i.e. version
   is the same and so on), the provider with the higher priority is chosen.
@@ -1874,9 +1881,9 @@ the tool via the `tools` variable in the template. Therefore, if you set
 like `aarch64-linux-musl-foo`.
 
 Additionally, these tools are also exported into the environment with
-their host values, as `BUILD_CC`, `BUILD_LD` and so on. This is to ensure
-that project build systems can utilize both host and target toolchains
-where appropriate.
+their host values, as `BUILD_CC`, `BUILD_LD` and so on, as well as GNU-style
+`CC_FOR_BUILD. and the likes This is to ensure that project build systems
+can utilize both host and target toolchains where appropriate.
 
 Tool flags have a bit more elaborate handling. Similarly to tools they
 are also exported into the environment by their names, including for
@@ -2041,6 +2048,7 @@ class Profile:
     cross = ...
     repos = ...
     goarch = ...
+    goarm = ...
 ```
 
 The properties have the following meanings:
@@ -2056,6 +2064,8 @@ The properties have the following meanings:
   `False` otherwise.
 * `goarch` The architecture name for the Go programming language. Optional
   and only present when supported by the toolchain.
+* `goarm` For 32-bit ARM (`goarch` is `arm`) this is the ARM architecture
+  version (ARMv5/6/7).
 
 For the `bootstrap` profile, `triplet` and `short_triplet` are `None`.
 
@@ -2149,6 +2159,8 @@ The following environment variables are exported into the sandbox:
 * `CBUILD_HOST_TRIPLET` Full host triplet (as described in profile).
   This is not exported during stage0 bootstrap.
 
+All `BUILD_foo` variables are also exported as `foo_FOR_BUILD`.
+
 Additionally, when using `ccache`, the following are also exported:
 
 * `CCACHEPATH` The path to `ccache` toolchain symlinks.
@@ -2156,6 +2168,12 @@ Additionally, when using `ccache`, the following are also exported:
 * `CCACHE_COMPILERCHECK` Set to `content`.
 * `CCACHE_COMPRESS` Set to `1`.
 * `CCACHE_BASEDIR` Set to the `cbuild`-set current working directory.
+
+When using `sccache` and it is installed, the following are exported:
+
+* `RUSTC_WRAPPER` Set to `/usr/bin/sccache`.
+* `SCCACHE_DIR` The path to the `sccache` data.
+* `SCCACHE_IDLE_TIMEOUT` Set to 30 by default.
 
 When set in host environment, the variables `NO_PROXY`, `FTP_PROXY`,
 `HTTP_PROXY`, `HTTPS_PROXY`, `SOCKS_PROXY`, `FTP_RETRIES`, `HTTP_PROXY_AUTH`
@@ -2242,12 +2260,13 @@ always has to have it defined in the template.
 6) init: `extract`
 7) `do_extract` OR `do_extract` hooks
 8) post: `extract`
-9) step: `prepare`
+9) step: `prepare` (if before patch)
 10) step: `patch`
-11) step: `configure`
-12) step: `build`
-13) step: `check`
-14) step: `install`
+11) step: `prepare` (if after patch)
+12) step: `configure`
+13) step: `build`
+14) step: `check`
+15) step: `install`
 
 The `install` step is also special in that it does not call `post_install`
 hooks yet (`post_install` function is called though).
@@ -2687,7 +2706,11 @@ Whether building `dbg` packages is enabled by `cbuild`.
 
 ##### self.use_ccache
 
-Whether using `ccache` is enabled by `cbuild`
+Whether using `ccache` is enabled by `cbuild`.
+
+##### self.use_sccache
+
+Whether using `sccache` is enabled by `cbuild`.
 
 ##### self.wrksrc
 
@@ -2998,6 +3021,18 @@ If `enable` is `True`, the service will be implicitly enabled as system service.
 ##### def install_svscript(self, src, name = None)
 
 Equivalent to `self.install_file(src, "etc/dinit.d/scripts", 0o755, name)`.
+
+##### def install_tmpfiles(self, src, name = None)
+
+Install a configuration file in `/usr/lib/tmpfiles.d`. By default, take the
+base name (plus `.conf` extension) from the package name, but that can be
+overridden.
+
+##### def install_sysusers(self, src, name = None)
+
+Install a configuration file in `/usr/lib/sysusers.d`. By default, take the
+base name (plus `.conf` extension) from the package name, but that can be
+overridden.
 
 ##### def install_link(self, dest, tgt, absolute=False)
 
@@ -3531,11 +3566,6 @@ the rest.
 Generically invoke a `meson` command. This calls `meson`, giving it the command
 and `extra_args`. If `wrapper` is given, `meson` is run through it. The given
 `build_dir` is the working directory, and `env` is the environment.
-
-##### def compile(pkg, command, build_dir, extra_args = [], env = {}, wrapper = [])
-
-Like running `invoke` with `compile` command. The `--jobs` argument is passed
-before any other `extra_args`, with `pkg.make_jobs`.
 
 ##### def install(pkg, command, build_dir, extra_args = [], env = {}, wrapper = [])
 

@@ -1,5 +1,5 @@
 pkgname = "gmic"
-pkgver = "3.3.6"
+pkgver = "3.4.0"
 pkgrel = 0
 build_style = "makefile"
 make_cmd = "gmake"
@@ -30,16 +30,12 @@ maintainer = "psykose <alice@ayaya.dev>"
 license = "CECILL-2.1"
 url = "https://gmic.eu"
 source = f"https://gmic.eu/files/source/gmic_{pkgver}.tar.gz"
-sha256 = "783db018dece6dc443349ddf1cc85ff06b2aeb9a4612f795859c39c85d38fddf"
+sha256 = "4fc0c79eed360c4f804d8110d7955bc8e0db9a14fba9483fe494f02c3640be69"
 # vis broken
 # FIXME int: gmic_qt PreviewWidget::updateOriginalImagePosition
 hardening = ["!int"]
 # no tests
 options = ["!check"]
-
-
-if self.profile().arch == "riscv64":
-    broken = "qmake busted under emulation (https://bugreports.qt.io/browse/QTBUG-98951)"
 
 
 def do_build(self):

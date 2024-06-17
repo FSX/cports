@@ -1,5 +1,5 @@
 pkgname = "nginx"
-pkgver = "1.26.0"
+pkgver = "1.26.1"
 pkgrel = 1
 build_style = "configure"
 configure_args = [
@@ -86,7 +86,7 @@ source = [
 ]
 source_paths = [".", "nginx-tests"]
 sha256 = [
-    "d2e6c8439d6c6db5015d8eaab2470ab52aef85a7bf363182879977e084370497",
+    "f9187468ff2eb159260bfd53867c25ff8e334726237acf227b9e870e53d3e36b",
     "c9b464e6f9cc129eade5d3068c168bf598513d346799483c73cd18c107859d38",
 ]
 # needs a lot more work
@@ -97,16 +97,8 @@ def post_install(self):
     self.install_license("LICENSE")
     self.install_file("README", "usr/share/doc/nginx")
     self.install_man("man/nginx.8")
-    self.install_file(
-        self.files_path / "sysusers.conf",
-        "usr/lib/sysusers.d",
-        name="nginx.conf",
-    )
-    self.install_file(
-        self.files_path / "tmpfiles.conf",
-        "usr/lib/tmpfiles.d",
-        name="nginx.conf",
-    )
+    self.install_sysusers(self.files_path / "sysusers.conf")
+    self.install_tmpfiles(self.files_path / "tmpfiles.conf")
     self.install_service(self.files_path / "nginx")
     # must be present in main package
     self.install_dir("usr/lib/nginx/modules", empty=True)

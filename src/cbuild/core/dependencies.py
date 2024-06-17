@@ -445,7 +445,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                     pkg.run_check,
                     (pkg.conf_jobs, pkg.conf_link_threads),
                     pkg.build_dbg,
-                    pkg.use_ccache,
+                    (pkg.use_ccache, pkg.use_sccache, pkg.use_ltocache),
                     pkg,
                     resolve=pkg,
                     force_check=pkg._force_check,
@@ -457,6 +457,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                 chost=hostdep or not not pprof.cross,
                 no_update=not missing,
                 update_check=update_check,
+                maintainer=pkg._maintainer,
             )
             missing = True
         except template.SkipPackage:
@@ -476,7 +477,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                     pkg.run_check,
                     (pkg.conf_jobs, pkg.conf_link_threads),
                     pkg.build_dbg,
-                    pkg.use_ccache,
+                    (pkg.use_ccache, pkg.use_sccache, pkg.use_ltocache),
                     pkg,
                     resolve=pkg,
                     force_check=pkg._force_check,
@@ -488,6 +489,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                 chost=hostdep,
                 no_update=not missing,
                 update_check=update_check,
+                maintainer=pkg._maintainer,
             )
             missing = True
         except template.SkipPackage:
@@ -516,7 +518,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                     pkg.run_check,
                     (pkg.conf_jobs, pkg.conf_link_threads),
                     pkg.build_dbg,
-                    pkg.use_ccache,
+                    (pkg.use_ccache, pkg.use_sccache, pkg.use_ltocache),
                     pkg,
                     resolve=pkg,
                     force_check=pkg._force_check,
@@ -528,6 +530,7 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
                 chost=hostdep,
                 no_update=not missing,
                 update_check=update_check,
+                maintainer=pkg._maintainer,
             )
             missing = True
         except template.SkipPackage:

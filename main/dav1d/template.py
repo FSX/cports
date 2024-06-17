@@ -1,5 +1,5 @@
 pkgname = "dav1d"
-pkgver = "1.4.1"
+pkgver = "1.4.3"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -13,8 +13,8 @@ pkgdesc = "Small and fast AV1 decoder"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "BSD-2-Clause"
 url = "https://code.videolan.org/videolan/dav1d"
-source = f"{url}/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "04da7689748a3501d00b6796b6de0596177019709ecc6095c667b7964895dd8c"
+source = f"{url}/-/archive/{pkgver}/dav1d-{pkgver}.tar.gz"
+sha256 = "88a023e58d955e0886faf49c72940e0e90914a948a8e60c1326ce3e09e7a6099"
 # FIXME cfi, int
 hardening = ["vis", "!cfi", "!int"]
 

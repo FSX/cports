@@ -1,8 +1,8 @@
 pkgname = "musl-mallocng"
 pkgver = "1.2.5_git20240512"
-pkgrel = 2
+pkgrel = 3
 _commit = "007997299248b8682dcbb73595c53dfe86071c83"
-_scudo_ver = "18.1.5"
+_scudo_ver = "18.1.7"
 build_style = "gnu_configure"
 configure_args = [
     "--prefix=/usr",
@@ -31,7 +31,7 @@ source = [
 source_paths = [".", "compiler-rt"]
 sha256 = [
     "d93dbd9f944d3fadd4048a2c44304e02cf95812718f290d3db0528e2f8045d21",
-    "a58fa6ce9b2d1653eaad384be4972cfdfde6dac11d2f7764f17eed801fe8c289",
+    "7df49e669b0e93d183f5c0fcf01a4b5bbeeeb90304afffbdd84d4871da6b6e98",
 ]
 compression = "deflate"
 # scp makes it segfault
@@ -61,6 +61,9 @@ def post_extract(self):
     # copy in our own wrappers
     self.cp(self.files_path / "wrappers.cpp", "src/malloc/scudo")
     # now we're ready to get patched
+    # but also remove musl's x86_64 asm memcpy as it's actually
+    # noticeably slower than the c implementation
+    self.rm("src/string/x86_64/memcpy.s")
 
 
 def pre_install(self):

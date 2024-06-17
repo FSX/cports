@@ -4,6 +4,31 @@ import shutil
 import stat
 
 
+pkg_stack = []
+pkg_failed = None
+
+
+def push(pkg):
+    pkg_stack.append(pkg)
+
+
+def pop():
+    return pkg_stack.pop()
+
+
+def failed():
+    global pkg_failed
+    retv = pkg_failed
+    pkg_failed = None
+    return retv
+
+
+def set_failed(pkg):
+    global pkg_failed
+    if not pkg_failed:
+        pkg_failed = pkg
+
+
 def _remove_ro(f, path, _):
     os.chmod(path, stat.S_IWRITE)
     f(path)

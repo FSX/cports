@@ -1,29 +1,26 @@
 pkgname = "iniparser"
-pkgver = "4.2.1"
+pkgver = "4.2.4"
 pkgrel = 0
-build_style = "makefile"
-make_cmd = "gmake"
-make_dir = "."
-# unset extra defaults
-make_build_args = ["ADDITIONAL_CFLAGS="]
-hostmakedepends = ["gmake"]
+build_style = "cmake"
+hostmakedepends = [
+    "cmake",
+    "doxygen",
+    "ninja",
+    "pkgconf",
+]
 checkdepends = ["bash"]
 pkgdesc = "C library for INI file parsing"
 maintainer = "psykose <alice@ayaya.dev>"
 license = "MIT"
-url = "https://github.com/ndevilla/iniparser"
-source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "9120fd13260be1dbec74b8aaf47777c434976626f3b3288c0d17b70e21cce2d2"
+url = "https://gitlab.com/iniparser/iniparser"
+source = f"{url}/-/archive/v{pkgver}.tar.gz"
+sha256 = "cd4341a4dec5505e1f007cec643d064e8ad526569bd904f0e823c4a6ab10b8ba"
 # vis breaks symbols
 hardening = []
 
 
-def do_install(self):
+def post_install(self):
     self.install_license("LICENSE")
-    # bruh moment
-    self.install_file("libiniparser.*", "usr/lib", glob=True)
-    self.install_link("usr/lib/libiniparser.so", "libiniparser.so.1")
-    self.install_file("src/*.h", "usr/include", glob=True)
 
 
 @subpackage("iniparser-devel")

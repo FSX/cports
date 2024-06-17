@@ -1,6 +1,6 @@
 pkgname = "emacs-console"
 pkgver = "29.3"
-pkgrel = 2
+pkgrel = 4
 build_style = "gnu_configure"
 configure_args = [
     "--with-gameuser=:_games",
@@ -46,9 +46,11 @@ options = ["!check"]
 
 
 def post_install(self):
-    self.install_file(self.files_path / "emacs.conf", "usr/lib/sysusers.d")
+    self.install_sysusers(self.files_path / "emacs.conf", name="emacs")
     # remove suid from game exe
     (
         self.destdir
         / f"usr/libexec/emacs/{pkgver}/{self.profile().triplet}/update-game-score"
     ).chmod(0o755)
+
+    self.rm(self.destdir / "usr/lib/systemd/user", recursive=True)

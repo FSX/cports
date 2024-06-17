@@ -1,5 +1,5 @@
 pkgname = "pipewire"
-pkgver = "1.0.6"
+pkgver = "1.0.7"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -77,7 +77,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT"
 url = "https://pipewire.org"
 source = f"https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "aaaaa9825f313f0acc64bd046776da8a2f31e270f20351ecf97438d15aebce79"
+sha256 = "9c45eef65e66224804ae8671849452a7f221e913813072b3aad346f20df666a8"
 # FIXME int: e.g. https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/2968
 hardening = ["!int"]
 
@@ -92,7 +92,7 @@ else:
 
 def post_install(self):
     self.install_license("LICENSE")
-    self.install_file(self.files_path / "pipewire.conf", "usr/lib/sysusers.d")
+    self.install_sysusers(self.files_path / "pipewire.conf")
     self.install_service(self.files_path / "pipewire.user", enable=True)
     self.install_service(self.files_path / "pipewire-pulse.user", enable=True)
 

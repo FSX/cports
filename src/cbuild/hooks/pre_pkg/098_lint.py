@@ -3,8 +3,8 @@ def invoke(pkg):
     if pkg.pkgname == "base-files" or pkg.pkgname == "base-kernel":
         return
 
-    # gcompat is allowed to have them
-    if pkg.pkgname == "gcompat":
+    # gcompat and bash-completion is allowed to have them
+    if pkg.pkgname in ["bash-completion", "gcompat"]:
         return
 
     lintfail = False
@@ -32,6 +32,9 @@ def invoke(pkg):
         "var/run",
         "usr/local",
         "usr/lib/locale",
+        "usr/lib/systemd/system",
+        "usr/lib/systemd/user",
+        "usr/share/glib-2.0/schemas/gschemas.compiled",
         "usr/share/mime/XMLnamespaces",
         "usr/share/mime/aliases",
         "usr/share/mime/generic-icons",

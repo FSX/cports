@@ -1,18 +1,14 @@
 pkgname = "evolution"
-pkgver = "3.52.1"
-pkgrel = 0
+pkgver = "3.52.2"
+pkgrel = 1
 build_style = "cmake"
-configure_args = [
-    "-DWITH_OPENLDAP=OFF",
-    "-DENABLE_TEXT_HIGHLIGHT=OFF",
-    "-DENABLE_PST_IMPORT=OFF",
-    "-DENABLE_MARKDOWN=OFF",
-]
+configure_args = ["-DWITH_OPENLDAP=OFF"]
 hostmakedepends = [
     "cmake",
     "gettext",
     "glib-devel",
     "gtk-update-icon-cache",
+    "highlight",
     "intltool",
     "itstool",
     "ninja",
@@ -21,6 +17,7 @@ hostmakedepends = [
 makedepends = [
     "at-spi2-core-devel",
     "cairo-devel",
+    "cmark-devel",
     "enchant-devel",
     "evolution-data-server-devel",
     "gdk-pixbuf-devel",
@@ -34,6 +31,7 @@ makedepends = [
     "libcanberra-devel",
     "libgweather-devel",
     "libnotify-devel",
+    "libpst-devel",
     "libsecret-devel",
     "libsoup-devel",
     "libxml2-devel",
@@ -45,12 +43,13 @@ makedepends = [
     "xorgproto",
     "ytnef-devel",
 ]
+depends = ["highlight"]
 pkgdesc = "Mail, calendar and address book suite"
 maintainer = "triallax <triallax@tutanota.com>"
 license = "LGPL-2.1-or-later"
 url = "https://wiki.gnome.org/Apps/Evolution"
 source = f"https://download.gnome.org/sources/evolution/{pkgver[:-2]}/evolution-{pkgver}.tar.xz"
-sha256 = "68daed111dade3618ca708ecb3cab4cd93ba502f5ae9d5e797073c3a13e29de9"
+sha256 = "a48b7412d13edac74f6c09acfa676656e6a12edf0030cddc26029ac04da3e551"
 
 
 @subpackage("evolution-devel")

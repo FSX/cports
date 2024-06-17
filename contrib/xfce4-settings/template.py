@@ -1,6 +1,6 @@
 pkgname = "xfce4-settings"
-pkgver = "4.18.4"
-pkgrel = 1
+pkgver = "4.18.6"
+pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
     "--enable-pluggable-dialogs",
@@ -8,6 +8,7 @@ configure_args = [
     "--enable-upower-glib",
 ]
 make_cmd = "gmake"
+make_dir = "."
 hostmakedepends = [
     "automake",
     "gettext-devel",
@@ -42,7 +43,7 @@ maintainer = "triallax <triallax@tutanota.com>"
 license = "GPL-2.0-only"
 url = "https://docs.xfce.org/xfce/xfce4-settings/start"
 source = f"$(XFCE_SITE)/xfce/xfce4-settings/{pkgver[:-2]}/xfce4-settings-{pkgver}.tar.bz2"
-sha256 = "f10c55d0360308d9944f415645d9596d4352f952a20fc7c4a66f30fe511ca1dc"
+sha256 = "d9a9051b6026edd6766c64bb403b51e9167e4d31e7f1c7f843d3aed19f667bfe"
 
 
 @subpackage("xfce4-settings-default-themes")

@@ -1,8 +1,10 @@
 pkgname = "xfce4-notifyd"
 pkgver = "0.9.4"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
+configure_args = ["--disable-systemd"]
 make_cmd = "gmake"
+make_dir = "."
 hostmakedepends = [
     "automake",
     "gettext-devel",

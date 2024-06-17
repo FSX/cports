@@ -1,13 +1,12 @@
 pkgname = "elogind"
-pkgver = "252.9"
-pkgrel = 5
+pkgver = "255.5"
+pkgrel = 1
 build_style = "meson"
 configure_args = [
+    "--libexecdir=/usr/libexec/elogind",
     "-Dman=true",
-    "-Dpamconfdir=/etc/pam.d",
+    "-Dpamconfdir=/usr/lib/pam.d",
     "-Dpamlibdir=/usr/lib/security",
-    "-Drootlibdir=/usr/lib",
-    "-Drootlibexecdir=/usr/libexec/elogind",
     "-Dhalt-path=/usr/bin/halt",
     "-Dreboot-path=/usr/bin/reboot",
     "-Dcgroup-controller=elogind",
@@ -35,15 +34,15 @@ makedepends = [
     "linux-pam-devel",
     "libmount-devel",
 ]
-checkdepends = ["bash"]
-depends = ["turnstile"]
+checkdepends = ["bash", "python-lxml"]
+depends = ["dbus", "turnstile"]
 install_if = [f"elogind-meta={pkgver}-r{pkgrel}"]
 pkgdesc = "Standalone version of logind"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-2.0-or-later AND LGPL-2.0-or-later"
 url = "https://github.com/elogind/elogind"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "7af8caa8225a406e77fb99c9f33dba5e1f0a94f0e1277c9d91dcfc016f116d85"
+sha256 = "ef83beb381064516c29290f0fedcbbe36de052f313d72d120eade69ab26b82fe"
 
 
 def post_install(self):
@@ -55,7 +54,7 @@ def post_install(self):
     self.install_file("src/systemd/sd-id128.h", "usr/include")
     self.install_file("src/systemd/_sd-common.h", "usr/include")
     # service file
-    self.install_file(self.files_path / "elogind.conf", "usr/lib/tmpfiles.d")
+    self.install_tmpfiles(self.files_path / "elogind.conf")
     self.install_service(self.files_path / "elogind", enable=True)
 
 
@@ -94,7 +93,7 @@ def _pam(self):
     self.depends = [f"{pkgname}={pkgver}-r{pkgrel}", "linux-pam"]
     self.install_if = [f"{pkgname}={pkgver}-r{pkgrel}", "linux-pam"]
     return [
-        "etc/pam.d",
+        "usr/lib/pam.d",
         "usr/lib/security",
         "usr/share/man/man8/pam_elogind.8",
     ]

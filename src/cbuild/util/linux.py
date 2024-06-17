@@ -1,8 +1,8 @@
 # linux kernel packaging helpers
 
 
-def get_arch(arch):
-    match arch:
+def get_arch(pkg):
+    match pkg.profile().arch:
         case "ppc64le" | "ppc64" | "ppc":
             return "powerpc"
         case "aarch64":
@@ -11,9 +11,10 @@ def get_arch(arch):
             return "x86_64"
         case "riscv64":
             return "riscv"
+        case "armhf" | "armv7":
+            return "arm"
         case _:
-            # unknown, fill in
-            return None
+            pkg.error(f"unknown linux architecture {pkg.profile().arch}")
 
 
 def _gen_script(pkg, script, flavor, args=""):
@@ -61,7 +62,7 @@ def configure(pkg, flavor, build_dir=None, env=None):
     pkg.do(
         "chimera-buildkernel",
         "prepare",
-        f"ARCH={get_arch(cfgarch)}",
+        f"ARCH={get_arch(pkg)}",
         f"CONFIG_FILE={pkg.chroot_cwd}/{cfgname}",
         f"OBJDIR={bdir}",
         f"JOBS={pkg.make_jobs}",

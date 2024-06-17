@@ -17,6 +17,42 @@ def build(
     no_update=False,
     update_check=False,
     accept_checksums=False,
+    maintainer=None,
+):
+    pkgm.push(pkg)
+    try:
+        _build(
+            step,
+            pkg,
+            depmap,
+            chost,
+            dirty,
+            keep_temp,
+            check_fail,
+            no_update,
+            update_check,
+            accept_checksums,
+            maintainer,
+        )
+    except Exception:
+        pkgm.set_failed(pkgm.pop())
+        raise
+    pkgm.pop()
+    pkg.log(f"finished phase '{step}'")
+
+
+def _build(
+    step,
+    pkg,
+    depmap,
+    chost,
+    dirty,
+    keep_temp,
+    check_fail,
+    no_update,
+    update_check,
+    accept_checksums,
+    maintainer,
 ):
     if chost:
         depn = "host-" + pkg.pkgname
@@ -57,6 +93,8 @@ def build(
     pkg.cwd = pkg.builddir / pkg.wrksrc
     pkg.chroot_cwd = pkg.chroot_builddir / pkg.wrksrc
 
+    pkg._maintainer = maintainer
+
     prof = pkg.profile()
     hard = profile.get_hardening(prof, pkg)
     hpos = []
@@ -85,7 +123,7 @@ def build(
         if step == "fetch":
             return
 
-    if not dirty:
+    if not dirty or step == "deps":
         # no_update is set when this is a build triggered by a missing dep;
         # in this case chroot.update() was already performed by its parent
         # call and there is no point in doing it again
@@ -104,6 +142,9 @@ def build(
         ):
             chroot.update(pkg)
 
+    if step == "deps":
+        return
+
     if hasattr(pkg, "do_fetch"):
         pkg.current_phase = "fetch"
         fetch.invoke(pkg)
@@ -116,15 +157,22 @@ def build(
     if step == "extract":
         return
 
-    pkg.current_phase = "prepare"
-    prepare.invoke(pkg)
-    if step == "prepare":
-        return
+    if not pkg.prepare_after_patch:
+        pkg.current_phase = "prepare"
+        prepare.invoke(pkg)
+        if step == "prepare":
+            return
 
     pkg.current_phase = "patch"
     patch.invoke(pkg)
     if step == "patch":
         return
+
+    if pkg.prepare_after_patch:
+        pkg.current_phase = "prepare"
+        prepare.invoke(pkg)
+        if step == "prepare":
+            return
 
     pkg.cwd = oldcwd
     pkg.chroot_cwd = oldchd
@@ -174,6 +222,7 @@ def build(
             pkgsm.invoke(sp)
         # generate primary packages
         pkgsm.invoke(pkg)
+        pkg.current_phase = "index"
         # stage binary packages
         for repo in pkg._stage:
             logger.get().out(f"Staging new packages to {repo}...")
@@ -181,6 +230,7 @@ def build(
                 raise errors.CbuildException("indexing repositories failed")
 
     # cleanup
+    pkg.current_phase = "cleanup"
     if not keep_temp:
         chroot.remove_autodeps(pkg.stage == 0, pkg.profile())
         pkgm.remove_pkg_wrksrc(pkg)

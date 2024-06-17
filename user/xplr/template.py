@@ -1,5 +1,5 @@
 pkgname = "xplr"
-pkgver = "0.21.8"
+pkgver = "0.21.9"
 pkgrel = 0
 build_style = "cargo"
 make_build_args = ["--no-default-features"]
@@ -19,25 +19,13 @@ url = "https://xplr.dev"
 source = (
     f"https://github.com/sayanarijit/xplr/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "6fa6ab87cd9f48e531146e2f04c980f2ec90259b3e7b874bf9e165e613be0789"
+sha256 = "345400c2fb7046963b2e0fcca8802b6e523e0fb742d0d893cb7fd42f10072a55"
 # needs rebuild with non-release to use bin from debug/
 options = ["!check"]
 
 
 def post_extract(self):
     self.rm(".cargo/config")
-
-
-def do_prepare(self):
-    # we patch the lockfile so vendor after patch
-    pass
-
-
-def post_patch(self):
-    from cbuild.util import cargo
-
-    self.cargo.vendor()
-    cargo.setup_vendor(self)
 
 
 def post_install(self):

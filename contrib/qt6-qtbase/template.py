@@ -1,65 +1,71 @@
 # keep pkgver AND pkgrel in sync with qt6-qtwayland
 pkgname = "qt6-qtbase"
 pkgver = "6.7.1"
-pkgrel = 0
+pkgrel = 7
 build_style = "cmake"
 configure_args = [
-    "-DINSTALL_DATADIR=share/qt6",
+    "-DBUILD_WITH_PCH=OFF",
     "-DINSTALL_ARCHDATADIR=lib/qt6",
     "-DINSTALL_BINDIR=lib/qt6/bin",
-    "-DINSTALL_PUBLICBINDIR=usr/bin",
+    "-DINSTALL_DATADIR=share/qt6",
     "-DINSTALL_DOCDIR=share/doc/qt6",
-    "-DINSTALL_MKSPECSDIR=lib/qt6/mkspecs",
-    "-DINSTALL_INCLUDEDIR=include/qt6",
     "-DINSTALL_EXAMPLESDIR=lib/qt6/examples",
-    "-DINSTALL_TESTSDIR=lib/qt6/tests",
+    "-DINSTALL_INCLUDEDIR=include/qt6",
+    "-DINSTALL_MKSPECSDIR=lib/qt6/mkspecs",
+    "-DINSTALL_PUBLICBINDIR=usr/bin",
     "-DINSTALL_SYSCONFDIR=/etc/xdg",
-    "-DQT_FEATURE_journald=OFF",
-    "-DQT_FEATURE_reduce_relocations=OFF",
-    "-DQT_FEATURE_openssl_linked=ON",
-    "-DQT_FEATURE_system_xcb_xinput=ON",
-    "-DQT_FEATURE_system_sqlite=ON",
-    "-DQT_FEATURE_libproxy=ON",
-    "-DQT_FEATURE_syslog=ON",
-    "-DQT_FEATURE_vulkan=ON",
-    "-DQT_FEATURE_qmake=ON",
-    "-DQT_FEATURE_xcb=ON",
-    "-DBUILD_WITH_PCH=OFF",
+    "-DINSTALL_TESTSDIR=lib/qt6/tests",
     "-DQT_BUILD_TESTS=ON",
+    "-DQT_FEATURE_journald=OFF",
+    "-DQT_FEATURE_libproxy=ON",
+    "-DQT_FEATURE_openssl_linked=ON",
+    "-DQT_FEATURE_qmake=ON",
+    "-DQT_FEATURE_reduce_relocations=OFF",
+    "-DQT_FEATURE_syslog=ON",
+    "-DQT_FEATURE_system_sqlite=ON",
+    "-DQT_FEATURE_vulkan=ON",
+    "-DQT_FEATURE_xcb=ON",
+    "-DQT_FEATURE_xcb_glx_plugin=ON",
 ]
-hostmakedepends = ["cmake", "ninja", "perl", "pkgconf", "xmlstarlet"]
+hostmakedepends = [
+    "cmake",
+    "ninja",
+    "perl",
+    "pkgconf",
+    "xmlstarlet",
+]
 makedepends = [
-    "zlib-devel",
-    "zstd-devel",
+    "brotli-devel",
+    "cups-devel",
     "dbus-devel",
     "double-conversion-devel",
+    "glib-devel",
+    "gtk+3-devel",
+    "harfbuzz-devel",
+    "heimdal-devel",
+    "icu-devel",
+    "libb2-devel",
+    "libinput-devel",
+    "libpng-devel",
+    "libproxy-devel",
     "libxcb-devel",
+    "libxkbcommon-devel",
+    "linux-headers",
+    "mesa-devel",
+    "mtdev-devel",
+    "pcre2-devel",
+    "sqlite-devel",
+    "tslib-devel",
+    "vulkan-headers",
+    "vulkan-loader-devel",
+    "wayland-devel",
+    "xcb-util-cursor-devel",
     "xcb-util-image-devel",
     "xcb-util-keysyms-devel",
     "xcb-util-renderutil-devel",
     "xcb-util-wm-devel",
-    "xcb-util-cursor-devel",
-    "mesa-devel",
-    "glib-devel",
-    "pcre2-devel",
-    "icu-devel",
-    "mtdev-devel",
-    "harfbuzz-devel",
-    "libpng-devel",
-    "tslib-devel",
-    "libinput-devel",
-    "gtk+3-devel",
-    "cups-devel",
-    "libproxy-devel",
-    "brotli-devel",
-    "sqlite-devel",
-    "heimdal-devel",
-    "libb2-devel",
-    "libxkbcommon-devel",
-    "wayland-devel",
-    "linux-headers",
-    "vulkan-headers",
-    "vulkan-loader-devel",
+    "zlib-devel",
+    "zstd-devel",
 ]
 depends = ["shared-mime-info"]
 pkgdesc = "Qt application framework (6.x)"
@@ -70,18 +76,20 @@ license = (
 url = "https://www.qt.io"
 source = f"https://download.qt.io/official_releases/qt/{pkgver[:-2]}/{pkgver}/submodules/qtbase-everywhere-src-{pkgver}.tar.xz"
 sha256 = "b7338da1bdccb4d861e714efffaa83f174dfe37e194916bfd7ec82279a6ace19"
-debug_level = 1  # defatten, especially with LTO
 # FIXME
 hardening = ["!int"]
 # TODO
 options = ["!cross"]
 
-if self.profile().arch == "aarch64":
-    configure_args += ["-DQT_FEATURE_opengles2=ON"]
-
 if self.profile().cross:
     hostmakedepends += ["qt6-qtbase"]
     configure_args += ["-DQT_FORCE_BUILD_TOOLS=ON"]
+
+if self.profile().arch == "riscv64":
+    # https://bugreports.qt.io/browse/QTBUG-98951
+    # our riscv64 is currently emulated, so this breaks anything using qmake from building
+    # just disable it on the arch for now, as it falls back to fork and works anyway
+    configure_args += ["-DQT_FEATURE_forkfd_pidfd=OFF"]
 
 
 def init_configure(self):

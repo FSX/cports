@@ -1,5 +1,5 @@
 pkgname = "rust"
-pkgver = "1.77.2"
+pkgver = "1.79.0"
 pkgrel = 0
 hostmakedepends = [
     "cmake",
@@ -30,7 +30,7 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "MIT OR Apache-2.0"
 url = "https://rust-lang.org"
 source = f"https://static.rust-lang.org/dist/rustc-{pkgver}-src.tar.xz"
-sha256 = "4d214c4189e4dd934d47e869fa5721b2c33dbbbdea21f2fc7fa6df3f38c1dea2"
+sha256 = "ab826e84b8d48ec6eda3370065034dea8c006f6a946d78a9ba12bcb50e6d3c7a"
 # global environment
 env = {
     "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
@@ -71,9 +71,9 @@ def post_patch(self):
     from cbuild.util import cargo
 
     # we are patching these
-    cargo.clear_vendor_checksums(self, "libc")
-    cargo.clear_vendor_checksums(self, "libc-0.2.148")
     cargo.clear_vendor_checksums(self, "libc-0.2.150")
+    cargo.clear_vendor_checksums(self, "libc-0.2.151")
+    cargo.clear_vendor_checksums(self, "libc-0.2.153")
 
 
 def do_configure(self):
@@ -139,7 +139,7 @@ extern {}
     with open(self.cwd / "config.toml", "w") as cfg:
         cfg.write(
             f"""
-change-id = 102579
+change-id = 123711
 
 [llvm]
 ninja = false
@@ -193,6 +193,8 @@ channel = 'stable'
 description = 'Chimera Linux'
 
 rpath = {_use_rpath}
+
+frame-pointers = true
 
 deny-warnings = false
 
@@ -271,6 +273,11 @@ def do_build(self):
         "env",
         "-u",
         "PKG_CONFIG",
+        # prevent global flags from being applied to wasi/other targets
+        "-u",
+        "CFLAGS",
+        "-u",
+        "CXXFLAGS",
         "--",
         "python",
         "x.py",

@@ -14,6 +14,8 @@ def _make_crossfile(pkg, build_dir):
             meson_cpu = "ppc64"
         case "ppc":
             meson_cpu = "ppc"
+        case "armhf" | "armv7":
+            meson_cpu = "arm"
         case _:
             pkg.error(f"unknown meson architecture: {pkg.profile().arch}")
 
@@ -113,17 +115,6 @@ def invoke(pkg, command, build_dir, extra_args=[], env={}, wrapper=[]):
         *extra_args,
         wrksrc=build_dir,
         env=env,
-    )
-
-
-def compile(pkg, build_dir, extra_args=[], env={}, wrapper=[]):
-    invoke(
-        pkg,
-        "compile",
-        build_dir,
-        ["--jobs", str(pkg.make_jobs)] + extra_args,
-        env,
-        wrapper,
     )
 
 

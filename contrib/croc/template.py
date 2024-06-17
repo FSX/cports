@@ -1,6 +1,6 @@
 pkgname = "croc"
-pkgver = "9.6.13"
-pkgrel = 1
+pkgver = "10.0.8"
+pkgrel = 0
 build_style = "go"
 hostmakedepends = ["go"]
 pkgdesc = "File transfer tool"
@@ -8,7 +8,7 @@ maintainer = "Paul A. Patience <paul@apatience.com>"
 license = "MIT"
 url = "https://github.com/schollz/croc"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "5362ae8433ebd4fda9efcd853b4b8959992cf5f531ef0958ea6ed969f2eafa7b"
+sha256 = "9dde7d5114b4466a7351f9117e5ffc0b2866e5dae5d094bd1bc65c83787528c1"
 # debug: fails to split on powerpc
 # check: needs network access
 options = ["!debug", "!check"]

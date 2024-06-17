@@ -1,6 +1,6 @@
 pkgname = "openimageio"
-pkgver = "2.5.11.0"
-pkgrel = 0
+pkgver = "2.5.12.0"
+pkgrel = 2
 build_style = "cmake"
 configure_args = [
     # disabled below
@@ -33,9 +33,11 @@ makedepends = [
     "libwebp-devel",
     "mesa-devel",
     "opencolorio-devel",
+    "opencv-devel",
     "openexr-devel",
     "openjpeg-devel",
     "onetbb-devel",
+    "ptex-devel",
     "pugixml-devel",
     "python-pybind11-devel",
     "robin-map",
@@ -46,7 +48,7 @@ maintainer = "Erica Z <zerica@callcc.eu>"
 license = "Apache-2.0"
 url = "https://github.com/AcademySoftwareFoundation/OpenImageIO"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "ebf1945e36679be55519d9f42a8f029c4a53d4efb4aaee3b10af6cdc93fb614b"
+sha256 = "51ea3c309bad7381fd0d7ef793e93a72d8e0edaeff4ff329f4f21fb5de3d90bd"
 hardening = ["!int"]
 
 
@@ -63,4 +65,5 @@ def _devel(self):
 @subpackage("python-openimageio")
 def _python(self):
     self.pkgdesc = "Python bindings for openimageio"
+    self.depends += ["python"]
     return ["usr/lib/python*"]

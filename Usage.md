@@ -500,7 +500,9 @@ The following commands are recognized:
 * `chroot` Enter the build root with an interactive shell. In this environment,
   the root is mostly unsandboxed, i.e. writable and with network access. You
   can use this kind of environment for quick testing, as well as entering failed
-  builds and inspecting them.
+  builds and inspecting them. By default it starts in `/tmp` but you can also
+  pass a template name and then it will start inside the template's build
+  directory if it exists (or `/builddir` if not).
 * `clean` Clean up the build root. This means removing automatic dependencies
   and removing `builddir` and `destdir` within.
 * `cycle-check` Scan all templates or a single template for build-time
@@ -508,7 +510,7 @@ The following commands are recognized:
   keep the tree free of cycles at all times. Therefore, if you encounter
   a cycle, resolve it and check again.
 * `dump` Dump serialized template metadata in JSON format for all of `cports`.
-* `fetch`, `extract`, `prepare`, `patch`, `configure`, `build`, `check`,
+* `deps`, `fetch`, `extract`, `prepare`, `patch`, `configure`, `build`, `check`,
   `install`, `pkg` Given an argument of template path (`category/name`) this
   will invoke the build process for the given template up until the given phase.
   The `pkg` phase contains all of the others. For example, `configure` will

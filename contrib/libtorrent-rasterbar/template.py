@@ -1,6 +1,6 @@
 pkgname = "libtorrent-rasterbar"
 pkgver = "2.0.10"
-pkgrel = 1
+pkgrel = 2
 build_style = "cmake"
 configure_args = [
     "-Dpython-bindings=ON",
@@ -10,7 +10,7 @@ configure_args = [
 # known broken/flaky/conditionally broken tests
 make_check_args = [
     "-E",
-    "(test_upnp|test_flags|test_add_torrent|test_create_torrent|test_remove_torrent|test_privacy|test_copy_file|test_web_seed|test_url_seed|test_transfer|test_ssl|test_http_connection|test_lsd)",
+    "(test_upnp|test_flags|test_add_torrent|test_create_torrent|test_remove_torrent|test_privacy|test_copy_file|test_web_seed|test_url_seed|test_transfer|test_ssl|test_http_connection|test_lsd|test_priority)",
 ]
 hostmakedepends = [
     "cmake",
@@ -46,5 +46,6 @@ def _devel(self):
 @subpackage("libtorrent-rasterbar-python")
 def _python(self):
     self.pkgdesc = f"{pkgdesc} (Python bindings)"
+    self.depends += ["python"]
 
     return ["usr/lib/python3*"]

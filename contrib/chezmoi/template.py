@@ -1,5 +1,5 @@
 pkgname = "chezmoi"
-pkgver = "2.48.1"
+pkgver = "2.49.0"
 pkgrel = 0
 build_style = "go"
 make_build_args = [
@@ -7,12 +7,12 @@ make_build_args = [
 ]
 hostmakedepends = ["go"]
 go_build_tags = ["noembeddocs", "noupgrade"]
-pkgdesc = "Manage your dotfiles across multiple machines, securely"
+pkgdesc = "Dotfiles manager"
 maintainer = "triallax <triallax@tutanota.com>"
 license = "MIT"
 url = "https://chezmoi.io"
 source = f"https://github.com/twpayne/chezmoi/archive/v{pkgver}.tar.gz"
-sha256 = "6c7647bd42dcda7370a85c3f744018667e4a122a227ac368373443dec694d6e9"
+sha256 = "10353cdc817d020b4ac2175aa0e45ac72cba2d11e16829e630ace7f5fe600ba3"
 # debug: fails to split on powerpc
 # check: needs network access
 options = ["!debug", "!check"]

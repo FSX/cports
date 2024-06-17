@@ -1,13 +1,13 @@
 pkgname = "enchant"
-pkgver = "2.7.3"
-pkgrel = 1
+pkgver = "2.8.1"
+pkgrel = 0
 build_style = "gnu_configure"
 configure_args = ["--enable-relocatable", "--disable-static"]
 make_cmd = "gmake"
 hostmakedepends = [
     "automake",
-    "libtool",
     "gmake",
+    "libtool",
     "pkgconf",
     "vala",
 ]
@@ -18,16 +18,14 @@ makedepends = [
     "icu-devel",
     "libltdl-devel",
     "nuspell-devel",
+    "unittest-cpp",
 ]
-checkdepends = ["unittest-cpp"]
 pkgdesc = "Generic spell checking library"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-or-later"
 url = "https://abiword.github.io/enchant"
 source = f"https://github.com/AbiWord/enchant/releases/download/v{pkgver}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "fe6ad4cbe8c71b9384ffdef962be52d4d2bd5ebfb6351435bb390543d4f78b1e"
-# missing checkdepends
-options = ["!check"]
+sha256 = "ff79de470b8eb16f53849dc49f2bce8ca4eb7decabfc1349716fe12616e52f4e"
 
 
 @subpackage("enchant-devel")

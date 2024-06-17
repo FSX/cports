@@ -1,6 +1,6 @@
 pkgname = "inkscape"
 pkgver = "1.3.2"
-pkgrel = 6
+pkgrel = 9
 build_style = "cmake"
 configure_args = [
     "-DBUILD_SHARED_LIBS=ON",
@@ -46,6 +46,7 @@ depends = [
     "python-appdirs",
     "python-cssselect",
     "python-lxml",
+    "python-numpy",
     "python-pillow",
     "python-scour",
 ]

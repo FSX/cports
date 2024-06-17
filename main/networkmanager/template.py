@@ -1,5 +1,5 @@
 pkgname = "networkmanager"
-pkgver = "1.46.0"
+pkgver = "1.48.0"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -89,7 +89,7 @@ url = "https://wiki.gnome.org/Projects/NetworkManager"
 source = (
     f"$(GNOME_SITE)/NetworkManager/{pkgver[:-2]}/NetworkManager-{pkgver}.tar.xz"
 )
-sha256 = "722649e25362693b334371473802a729b0ec9ee283375096905f868808e74068"
+sha256 = "fc80b942de38e329468e6fc1dfb40aad6a78d02ddf6b8ec31f9acc6460b8723f"
 # some tests use sysfs, + LD_BIND_NOW in tests does not work with our musl env
 options = ["!check", "!cross", "linkundefver"]
 
@@ -105,9 +105,7 @@ def post_install(self):
         self.files_path / "50-org.freedesktop.NetworkManager.rules",
         "usr/share/polkit-1/rules.d",
     )
-    self.install_file(
-        self.files_path / "networkmanager.conf", "usr/lib/tmpfiles.d"
-    )
+    self.install_tmpfiles(self.files_path / "networkmanager.conf")
     # kill hardlinks
     for f in ["nmtui-connect", "nmtui-hostname", "nmtui-edit"]:
         self.rm(self.destdir / f"usr/share/man/man1/{f}.1")

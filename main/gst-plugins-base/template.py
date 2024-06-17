@@ -1,60 +1,71 @@
 pkgname = "gst-plugins-base"
-pkgver = "1.24.3"
-pkgrel = 0
+pkgver = "1.24.4"
+pkgrel = 2
 build_style = "meson"
 configure_args = [
-    "-Dexamples=disabled",
-    "-Dtremor=disabled",
-    "-Ddoc=disabled",
-    "-Dcdparanoia=enabled",
-    "-Dintrospection=enabled",
+    "--auto-features=enabled",
     "-Ddefault_library=shared",
+    # stuff we don't want
+    # use pulse
+    "-Dalsa=disabled",
+    # scuffed vorbis decoder
+    "-Dtremor=disabled",
+    # misc
+    "-Ddoc=disabled",
+    "-Dexamples=disabled",
 ]
-make_check_env = {"XDG_RUNTIME_DIR": "/etc/xdg"}
+make_check_args = ["--timeout-multiplier=5"]
+make_check_env = {"XDG_RUNTIME_DIR": "/tmp"}
 hostmakedepends = [
-    "meson",
-    "pkgconf",
     "gettext",
     "glib-devel",
-    "orc",
     "gobject-introspection",
+    "meson",
+    "orc",
+    "pkgconf",
     "wayland-progs",
 ]
 makedepends = [
-    "gstreamer-devel",
-    "libxml2-devel",
-    "glib-devel",
-    "pango-devel",
     "cairo-devel",
-    "graphene-devel",
-    "libgudev-devel",
-    "libvisual-devel",
-    "orc-devel",
     "cdparanoia-devel",
-    "libtheora-devel",
-    "libvorbis-devel",
-    "opus-devel",
-    "libpng-devel",
+    "glib-devel",
+    "graphene-devel",
+    "gstreamer-devel",
+    "iso-codes",
+    "libgudev-devel",
     "libjpeg-turbo-devel",
-    "mesa-devel",
-    "libxv-devel",
-    "libxext-devel",
+    "libpng-devel",
     "libsm-devel",
+    "libtheora-devel",
+    "libvisual-devel",
+    "libvorbis-devel",
+    "libxext-devel",
+    "libxi-devel",
+    "libxml2-devel",
+    "libxv-devel",
+    "mesa-devel",
+    "opus-devel",
+    "orc-devel",
+    "pango-devel",
     "wayland-devel",
     "wayland-protocols",
 ]
-checkdepends = ["mesa-dri", "fonts-liberation-otf"]
-depends = ["orc", f"gstreamer~{pkgver}"]
+depends = [
+    f"gstreamer~{pkgver}",
+    "libvisual-plugins-meta",
+    "orc",
+]
+checkdepends = ["fonts-liberation-otf"]
 pkgdesc = "GStreamer base plugins"
 maintainer = "q66 <q66@chimera-linux.org>"
 license = "LGPL-2.1-or-later"
 url = "https://gstreamer.freedesktop.org"
 source = f"{url}/src/{pkgname}/{pkgname}-{pkgver}.tar.xz"
-sha256 = "f1094397eaa7932f06e57ebbb075aa33aa2c76e4b75630a16b02c8d4af46832e"
+sha256 = "09f4ddf246eeb819da1494ce336316edbbcb28fdff3ee2f9804891e84df39b2a"
 # FIXME int
 hardening = ["!int"]
-# FIXME libs_allocators fail
-options = ["!cross", "!check"]
+# gobject-introspection
+options = ["!cross"]
 
 
 @subpackage("gst-plugins-base-devel")

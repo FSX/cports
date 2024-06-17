@@ -1,14 +1,21 @@
 pkgname = "grim"
 pkgver = "1.4.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
+configure_args = [
+    "-Dfish-completions=true",
+    "-Dbash-completions=true",
+]
 hostmakedepends = [
     "meson",
     "pkgconf",
     "scdoc",
+    "wayland-progs",
 ]
 makedepends = [
+    "bash-completion",
     "cairo-devel",
+    "libjpeg-turbo-devel",
     "libxkbcommon-devel",
     "linux-headers",
     "wayland-devel",

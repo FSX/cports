@@ -1,6 +1,6 @@
 pkgname = "ffmpeg"
-pkgver = "6.1.1"
-pkgrel = 7
+pkgver = "7.0.1"
+pkgrel = 1
 build_style = "configure"
 configure_args = [
     "--prefix=/usr",
@@ -28,6 +28,7 @@ configure_args = [
     "--enable-libfreetype",
     "--enable-libharfbuzz",
     "--enable-libjack",
+    "--enable-libjxl",
     "--enable-libmodplug",
     "--enable-libmp3lame",
     "--enable-libopenjpeg",
@@ -62,14 +63,20 @@ configure_args = [
 make_cmd = "gmake"
 make_install_args = ["install-man"]
 make_check_args = ["-j1"]
-hostmakedepends = ["gmake", "pkgconf", "perl", "nasm", "texinfo"]
+hostmakedepends = [
+    "gmake",
+    "nasm",
+    "perl",
+    "pkgconf",
+    "texinfo",
+]
 makedepends = [
     "bzip2-devel",
     "dav1d-devel",
     "freetype-devel",
     "harfbuzz-devel",
-    "lame-devel",
     "ladspa-sdk",
+    "lame-devel",
     "libaom-devel",
     "libass-devel",
     "libbluray-devel",
@@ -77,6 +84,7 @@ makedepends = [
     "libcdio-devel",
     "libcdio-paranoia-devel",
     "libdrm-devel",
+    "libjxl-devel",
     "libmodplug-devel",
     "libplacebo-devel",
     "libpulse-devel",
@@ -119,15 +127,12 @@ maintainer = "q66 <q66@chimera-linux.org>"
 license = "GPL-3.0-or-later"
 url = "https://ffmpeg.org"
 source = f"{url}/releases/{pkgname}-{pkgver}.tar.xz"
-sha256 = "8684f4b00f94b85461884c3719382f1261f0d9eb3d59640a1f4ac0873616f968"
+sha256 = "bce9eeb0f17ef8982390b1f37711a61b4290dc8c2a0c1a37b5857e85bfb0e4ff"
 # seems to need rpath?
 options = ["!check"]
 
 if self.profile().arch != "riscv64":
     configure_args += ["--enable-lto=thin"]
-else:
-    # asm fails to build
-    configure_args += ["--disable-rvv"]
 
 if self.profile().cross:
     _archmap = {
@@ -147,18 +152,6 @@ if self.profile().cross:
         "--arch=" + _archmap.get(self.profile().arch, "unknown"),
         f"--sysroot={self.profile().sysroot}",
     ]
-
-
-def post_extract(self):
-    # bsd patch doesn't support renames, like in the vkheader-fix.patch
-    self.mv(
-        "libavcodec/vulkan_video_codec_av1std.h",
-        "libavcodec/vulkan_video_codec_av1std_mesa.h",
-    )
-    self.mv(
-        "libavcodec/vulkan_video_codec_av1std_decode.h",
-        "libavcodec/vulkan_video_codec_av1std_decode_mesa.h",
-    )
 
 
 def init_configure(self):
